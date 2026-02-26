@@ -3,6 +3,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+/data
+/archive
+/tests
+
+# generated files
+synthetic_biology_data_*
+/synthetic_biology_data_*
+
+
 # C extensions
 *.so
 

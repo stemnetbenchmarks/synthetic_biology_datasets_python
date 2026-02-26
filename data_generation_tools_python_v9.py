@@ -1669,9 +1669,12 @@ def main(n_rows: int = 100, random_seed: int = 42, config: DatasetConfig = None)
 
     logger.info(f"Process complete. All files saved to {output_dir}/")
 
-
+    #########################
+    # Adding files to bundle
+    #########################
+    
     # Get the filename from the path
-    txt_filename = os.path.basename("sythetic biology datasets python v8.txt")
+    txt_filename = os.path.basename("docs_synthetic_biology_datasets_python.txt")
 
     # Create the destination path
     destination = os.path.join(output_dir, txt_filename)
