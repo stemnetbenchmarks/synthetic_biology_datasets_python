@@ -53,7 +53,7 @@ Here the dataset will be specifically designed for the specific questions to be 
 examples maybe standard time engineered field questions and relative time (temp-field) questions: in the last X months...y?
 
 5. To the extent that we know, is the 'AI' (a model or a composite of parts) using a single stateless context window, or is it 'function-calling' and 'tool-using'?
-Note: Context windows are large, but 2.5
+Note: Context windows are large, but large datasets are still larger than large context windows.
 
 6. Statistical Questions that go beyond ~descriptive statistics
 
@@ -65,6 +65,90 @@ Note: Context windows are large, but 2.5
 - .sum(), .mean/median/mode()
 
 Etc.
+Benchmark Frameworks should include: 
+
+Clearly defined data and query scope 
+
+Data-set Generation 
+
+Data-set Validation 
+
+Answer Generation 
+
+Answer Validation 
+
+Validation Results 
+
+Further Validation Inspection Tools 
+
+Q&A Presentation 
+
+Test administration facilitation (e.g. recording and comparing results) 
+
+etc.
+
+
+Data and Query Scope: A standardized testing framework with reproducible results that: 
+
+1.  can be applied to different tools/services/models to compare performance (note: this may also relate to comparing ‘versions’ of the ‘same’ model or service as upgrades are frequent (weeks/months) and not-uncommonly degrade performance). 
+
+2.  will clearly test a known set of specific queries and challenges, such as: 
+
+- standard descriptive statistics (count, min, max, quartiles, std-dev, 1.5-IQR, mean, median, mode, etc.) 
+
+- value counts & unique values 
+
+- field/column types: boolean, int, float, string (perhaps tuple, array, set, dictionaries(hash-tables) etc.) 
+
+- grouping 
+
+- large scale queries (e.g. larger than will fit into MS excel, google sheets, context-windows(model input limits), etc.) 
+
+- multi-table queries 
+
+- ~stateful questions (meta-data questions and questions about the dataset) 
+
+- non-technical question interpretation (what is ‘most common’ interpreted as, how would ‘compare A and B’ be interpreted) 
+
+- very ambiguous natural language question handling (“Which is the good one?”) 
+
+- statistical pattern identification: linear, non-linear, logistic-probabilities, multi-variate, etc., statistical significance, sample-size and validity, etc.  
+
+- advanced questions such as ’causal’ inference, tail risk evaluation, strategic decision making, etc. 
+
+- information-flow (information theory) 
+
+- time series analysis (may be out of scope) 
+
+- natural language related queries (such as, simple: strings to be cleaned, or advanced: bag of words, TF-IDF, etc) 
+
+- questions involving decision trees (maybe out of scope)  
+
+- some overlap with unstructured data and analysis such as ‘sentiment’ analysis. (maybe out of scope but maybe an important new scope) 
+
+- multi-step questions (possibly requiring engineering new fields, multiple table-joins and groupings, etc.), e.g. a question that involves a bit of everything in this list. 
+
+ 
+
+Note: prediction-questions which would involve additional steps of train/test/validate synthetic data splitting are possible and likely useful but may be out of scope or would expand the time needed, maybe an important new scope) 
+
+ 
+
+ 
+
+The tool should make use of deterministically generated (‘synthetic’) and validated test-data, leaving no room for *ambiguity and not allowing answers to have been pre-memorized. (Here ‘synthetic’ does not mean ‘guesstimated’.)  
+
+ 
+
+*ambiguity: The data should be verifiable, unique, and accurate. 
+
+ 
+
+Note: While the focus here is scalable  tabular data analytics, there is some overlap with ‘data-warehouse’ and ‘data-lake’ unstructured and semi-structured data and fuzzy questions. It is recommended that a separate project/story be defined if the focus shifts significantly away from (a focus on) tabular data operations (e.g. SQL, Dataframe, etc.).  
+
+ 
+
+There are also many specific tests that could be done, expanding the scope of this project, for example ‘time series’ is a whole domain itself and could be perhaps multiple project-scopes if explored deeply. Financial analysis is another whole domain for which tools could be made. A-B testing results may be another specific case.
 
 
 ### Context:
@@ -73,8 +157,25 @@ Many applications of AI/ML can be tested for performance. Sometimes the term 'be
 
 
 
+# Steps to generate data (or use pre-made "sample" zip-archive):
+##### Whether in google colab, run locally, or another environment:
+1. Setup
+- make your python-env (unless it already exists as with google Colab)
+- put these files together:
+- - generator notebook
+- - validation checking notebook
+- - documentation txt file
+- configure parameters if you want or need to in the generator notebook (e.g. size of synthetic dataset)
 
+2. Run Notebook ('synthetic_data_testing_generation_tools')
 
+3. optionally inspect with the validation checking notebook
+
+4. find the html file:
+- check the validation health test results
+- administer the test to an AI model
+
+5. record results in your results .csv file
 
 
 # Test Questions Organized by Category
@@ -354,5 +455,27 @@ ANSWER: About 20% overall, with fish and turtles much more likely (90%) than oth
 
 Note: use assorted phrases that different types of analysis might pick up: film, movies, on stage, on camera, acting, performance, etc.
 
+
+## Appendix 1: Data Splits
+
+#### Why Train-Test-Validate splits are (possibly) not needed, current thinking:
+
+1. We are testing 'analysis' not 'prediction': The questions ask about identifying existing patterns in data, not forecasting future outcomes.
+
+2. The data is ~deterministically generated (same-input-same-output) with known patterns.
+
+3. Validation is not predictive accuracy: We are confirming that patterns were properly generated, not how well they generalize (predict).
+
+4. The testing scenario simulates data analysis workflows where analysts work with complete datasets, not where models predict future or unseen data.
+
+
+## Questions involving Prediction
+- possible prediction questions:
+-- flea treatment effectiveness - nutrition, medicine, etc. factors involving weight height color age etc.
+- having a 'train' 'test' sort of split, where a first set would be shown to the AI to predict what happens in a second not-shown set of data, which is the same pattern continuing.
+- possibly testing how much/many data are needed for correct or better predictive results
+- questions of validating answers
+- linear vs. nonlinear patterns
+- 'causal inference' type questions and data
 
 
