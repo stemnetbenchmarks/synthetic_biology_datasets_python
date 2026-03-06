@@ -1,5 +1,5 @@
 """
-csv_summary_blurb_augmentor.py
+csv_unstructured_blurb_generator.py
 
 Purpose:
 --------
