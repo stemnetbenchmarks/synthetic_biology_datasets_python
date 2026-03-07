@@ -1643,7 +1643,12 @@ def main(n_rows: int = 100, random_seed: int = 42, config: DatasetConfig = None)
     answers = generator.calculate_answers()
 
     # Save dataset
-    csv_filename = os.path.join(output_dir, f"synthetic_biology_dataset.csv")
+    csv_filename = os.path.join(output_dir, "synthetic_biology_dataset.csv")
+
+    # add unique ID column
+    df.insert(0, 'unique_id', df.index)
+
+    # make csv
     df.to_csv(csv_filename, index=False)
 
     # Generate validation report
@@ -1651,7 +1656,7 @@ def main(n_rows: int = 100, random_seed: int = 42, config: DatasetConfig = None)
     answers_validation = generator.validate_answers()
 
     # Save validation data as JSON
-    validation_json_filename = os.path.join(output_dir, f"validation_results.json")
+    validation_json_filename = os.path.join(output_dir, "validation_results.json")
     with open(validation_json_filename, "w") as f:
         json.dump({
             "dataset_validation": dataset_validation,
@@ -1659,11 +1664,11 @@ def main(n_rows: int = 100, random_seed: int = 42, config: DatasetConfig = None)
         }, f, indent=2, default=str)
 
     # Generate comprehensive HTML report
-    html_report_filename = os.path.join(output_dir, f"dataset_report.html")
+    html_report_filename = os.path.join(output_dir, "dataset_report.html")
     generator.generate_html_report(html_report_filename)
 
     # Save answers as JSON
-    answers_json_filename = os.path.join(output_dir, f"qa_answers.json")
+    answers_json_filename = os.path.join(output_dir, "qa_answers.json")
     with open(answers_json_filename, "w") as f:
         json.dump(answers, f, indent=2, default=str)
 
@@ -1672,7 +1677,7 @@ def main(n_rows: int = 100, random_seed: int = 42, config: DatasetConfig = None)
     #########################
     # Adding files to bundle
     #########################
-    
+
     # Get the filename from the path
     txt_filename = os.path.basename("docs_synthetic_biology_datasets_python.txt")
 
@@ -1747,14 +1752,14 @@ def create_custom_config():
 if __name__ == "__main__":
     # Example using default configuration
     result = main(20000)
-    print(f"\nProcess completed successfully with default configuration!")
+    print("\nProcess completed successfully with default configuration!")
 
     # Example using custom configuration
     # custom_config = create_custom_config()
     # custom_result = main(1000, 42, custom_config)
     # print(f"\nProcess completed successfully with custom configuration!")
 
-    print(f"Generated files:")
+    print("Generated files:")
     print(f"- Dataset: {result['dataset_csv']}")
     print(f"- Validation Results: {result['validation_json']}")
     print(f"- HTML Report: {result['html_report']}")
