@@ -229,6 +229,7 @@ def generate_blurb_using_template_zero(
     color: str,
     can_fly_phrase: str,
     can_swim_phrase: str,
+    can_run_phrase: str,
     watches_youtube_phrase: str,
     daily_food_grams_rounded: float,
     popularity_score_rounded: float
@@ -281,7 +282,7 @@ def generate_blurb_using_template_zero(
         f"This {animal_type} weighs {weight_kg_rounded} kg, and is {height_cm_rounded} cm tall. "
         f"It has a popularity_score of {popularity_score_rounded}. "
         f"It was born on {birth_date}, and is {color}. "
-        f"It {can_fly_phrase} fly, and {can_swim_phrase} swim. "
+        f"It {can_fly_phrase} fly, and {can_swim_phrase} swim, and {can_run_phrase} run. "
         f"It {watches_youtube_phrase} watch youtube."
     )
     return blurb_text
@@ -297,6 +298,7 @@ def generate_blurb_using_template_one(
     color: str,
     can_fly_phrase: str,
     can_swim_phrase: str,
+    can_run_phrase: str,
     watches_youtube_phrase: str,
     daily_food_grams_rounded: float,
     popularity_score_rounded: float
@@ -326,6 +328,7 @@ def generate_blurb_using_template_one(
         f"It is {age_years} years old. "
         f"It {can_fly_phrase} fly! "
         f"It {can_swim_phrase} swim! "
+        f"It {can_run_phrase} run! "
         f"This {animal_type} has {number_of_friends} friends and has a popularity_score of {popularity_score_rounded}. "
         f"It {watches_youtube_phrase} watch youtube."
     )
@@ -342,6 +345,7 @@ def generate_blurb_using_template_two(
     color: str,
     can_fly_phrase: str,
     can_swim_phrase: str,
+    can_run_phrase: str,
     watches_youtube_phrase: str,
     daily_food_grams_rounded: float,
     popularity_score_rounded: float
@@ -369,6 +373,7 @@ def generate_blurb_using_template_two(
         f"It is {height_cm_rounded} cm tall. "
         f"It gets {daily_food_grams_rounded} grams of food each day and weighs {weight_kg_rounded} kg! "
         f"It is {color}, and it was born on {birth_date}. "
+        f"It {can_run_phrase} run. "
         f"It is {age_years} years old! "
         f"It {can_swim_phrase} swim. "
         f"It {can_fly_phrase} fly. "
@@ -445,6 +450,9 @@ def generate_blurb_for_row(row_data: dict, row_index: int) -> str:
     can_swim_bool = convert_boolean_string_to_python_bool(row_data["can_swim"])
     can_swim_phrase = convert_can_ability_bool_to_phrase(can_swim_bool)
 
+    can_run_bool = convert_boolean_string_to_python_bool(row_data["can_run"])
+    can_run_phrase = convert_can_ability_bool_to_phrase(can_run_bool)
+
     watches_youtube_bool = convert_boolean_string_to_python_bool(row_data["watches_youtube"])
     watches_youtube_phrase = convert_watches_youtube_bool_to_phrase(watches_youtube_bool)
 
@@ -463,6 +471,7 @@ def generate_blurb_for_row(row_data: dict, row_index: int) -> str:
             color=color,
             can_fly_phrase=can_fly_phrase,
             can_swim_phrase=can_swim_phrase,
+            can_run_phrase=can_run_phrase,
             watches_youtube_phrase=watches_youtube_phrase,
             daily_food_grams_rounded=daily_food_grams_rounded,
             popularity_score_rounded=popularity_score_rounded
@@ -478,6 +487,7 @@ def generate_blurb_for_row(row_data: dict, row_index: int) -> str:
             color=color,
             can_fly_phrase=can_fly_phrase,
             can_swim_phrase=can_swim_phrase,
+            can_run_phrase=can_run_phrase,
             watches_youtube_phrase=watches_youtube_phrase,
             daily_food_grams_rounded=daily_food_grams_rounded,
             popularity_score_rounded=popularity_score_rounded
@@ -493,6 +503,7 @@ def generate_blurb_for_row(row_data: dict, row_index: int) -> str:
             color=color,
             can_fly_phrase=can_fly_phrase,
             can_swim_phrase=can_swim_phrase,
+            can_run_phrase=can_run_phrase,
             watches_youtube_phrase=watches_youtube_phrase,
             daily_food_grams_rounded=daily_food_grams_rounded,
             popularity_score_rounded=popularity_score_rounded
