@@ -102,6 +102,7 @@ RANDOM_SEED: int = 42
 # TIMESTAMP AND OUTPUT DIRECTORY SETUP
 # =============================================================================
 
+
 def create_timestamped_output_directory() -> tuple[str, Path]:
     """
     Create a timestamped output directory for test artifacts.
@@ -677,6 +678,7 @@ def generate_ground_truth_query_e(
 # The confusion matrix reveals whether the right documents were matched.
 # =============================================================================
 
+
 def classify_rows_into_confusion_categories(
     ground_truth_boolean_array: np.ndarray,
     vector_predicted_boolean_array: np.ndarray
@@ -878,19 +880,339 @@ def compute_confusion_matrix_metrics(
 # classifications after the test run.
 # =============================================================================
 
-def build_per_row_confusion_matrix_dataframe(
-    similarity_scores: np.ndarray,
-    similarity_threshold: float,
-    ground_truth_boolean_array: np.ndarray
+# =============================================================================
+# FALSE POSITIVE DIAGNOSTIC FUNCTIONS
+#
+# For each FP row, determine WHICH filter conditions that row fails.
+# This enables analysis of what the vector model is "confused by"
+# vs. what it correctly distinguishes but over-matches on.
+#
+# A fp_wrong_X = True means: this row does NOT satisfy condition X,
+# meaning X is a contributing reason this row is a false positive.
+#
+# For non-FP rows, all diagnostic columns are False and count is 0.
+# =============================================================================
+
+
+def compute_fp_diagnostic_columns(
+    dataframe: pd.DataFrame,
+    confusion_categories: np.ndarray,
+    query_filter_conditions: dict[str, tuple]
 ) -> pd.DataFrame:
     """
-    Build a per-row DataFrame with similarity, prediction, truth, and confusion class.
+    For each FP row, check which query filter conditions that row fails.
 
-    This DataFrame is the primary audit artifact. Any row can be inspected
-    to see why it was classified as TP, FP, FN, or TN.
+    Each filter condition becomes a boolean column: True means the row
+    FAILS that condition (i.e., that field is a reason this row should
+    not have been matched).
+
+    For non-FP rows, all diagnostic columns are False.
 
     Parameters
     ----------
+    dataframe : pd.DataFrame
+        Original dataset with all structured fields.
+        Must contain all columns referenced in query_filter_conditions.
+
+    confusion_categories : np.ndarray
+        String array of shape (n_rows,) with values "TP", "FP", "FN", "TN".
+        Only rows classified as "FP" get diagnostic analysis.
+
+    query_filter_conditions : dict[str, tuple]
+        Maps field names to (operator_string, threshold_value) tuples.
+        Supported operators: "==", ">", "<", ">=", "<=", "!="
+
+        Example for Query D:
+            {
+                "animal_type": ("==", "cat"),
+                "birth_unix": (">", 1515042000),
+                "can_fly": ("==", True),
+            }
+
+    Returns
+    -------
+    pd.DataFrame
+        Contains columns:
+        - fp_wrong_{field_name}: bool, one per filter condition
+        - fp_wrong_fields_count: int, total failed conditions per row
+
+        All False / 0 for non-FP rows.
+        Shape: (n_rows, len(query_filter_conditions) + 1)
+
+    Raises
+    ------
+    ValueError
+        If an unsupported operator string is encountered.
+        If a referenced column is missing from dataframe.
+    """
+    try:
+        row_count = len(dataframe)
+        fp_mask = confusion_categories == "FP"
+
+        # Validate that all referenced columns exist in dataframe
+        missing_columns = [
+            field_name for field_name in query_filter_conditions
+            if field_name not in dataframe.columns
+        ]
+        if missing_columns:
+            raise ValueError(
+                f"FP diagnostic references columns not in dataframe: {missing_columns}. "
+                f"Available columns: {list(dataframe.columns)}"
+            )
+
+        # Supported comparison operators mapped to callables
+        operator_dispatch = {
+            "==": lambda series, val: series == val,
+            "!=": lambda series, val: series != val,
+            ">":  lambda series, val: series > val,
+            "<":  lambda series, val: series < val,
+            ">=": lambda series, val: series >= val,
+            "<=": lambda series, val: series <= val,
+        }
+
+        # Build one boolean column per filter condition
+        diagnostic_columns: dict[str, np.ndarray] = {}
+
+        for field_name, (operator_string, threshold_value) in query_filter_conditions.items():
+
+            if operator_string not in operator_dispatch:
+                raise ValueError(
+                    f"Unsupported operator '{operator_string}' for field '{field_name}'. "
+                    f"Supported operators: {list(operator_dispatch.keys())}"
+                )
+
+            # Evaluate whether each row PASSES this condition
+            comparison_function = operator_dispatch[operator_string]
+            row_passes_condition = comparison_function(
+                dataframe[field_name], threshold_value
+            ).values
+
+            # "Wrong" means the row FAILS the condition
+            # But only mark as wrong for FP rows; non-FP rows get False
+            fp_wrong_for_field = np.zeros(row_count, dtype=bool)
+            fp_wrong_for_field[fp_mask] = ~row_passes_condition[fp_mask]
+
+            column_name = f"fp_wrong_{field_name}"
+            diagnostic_columns[column_name] = fp_wrong_for_field
+
+        # Count total wrong fields per row
+        if len(diagnostic_columns) > 0:
+            stacked_wrong_fields = np.column_stack(
+                list(diagnostic_columns.values())
+            )
+            fp_wrong_fields_count = stacked_wrong_fields.sum(axis=1).astype(int)
+        else:
+            fp_wrong_fields_count = np.zeros(row_count, dtype=int)
+
+        diagnostic_columns["fp_wrong_fields_count"] = fp_wrong_fields_count
+
+        fp_diagnostic_dataframe = pd.DataFrame(diagnostic_columns)
+
+        return fp_diagnostic_dataframe
+
+    except Exception as fp_diagnostic_error:
+        print(f"[ERROR] Failed to compute FP diagnostics: {fp_diagnostic_error}")
+        traceback.print_exc()
+        raise
+
+
+def summarize_fp_diagnostic_columns(
+    fp_diagnostic_dataframe: pd.DataFrame,
+    confusion_categories: np.ndarray,
+    query_label: str,
+    output_directory: Path,
+    timestamp_string: str,
+) -> dict[str, dict]:
+    """
+    Summarize which fields contribute most to false positives for one query.
+    Prints summary to stdout AND saves to CSV file.
+
+    Reports two metrics per field:
+        1. fp_rows_affected_proportion: Of all FP rows, what fraction fail
+           on this field? (These overlap; a row can fail multiple fields.)
+        2. error_contribution_proportion: Of all field-failure instances
+           across all FP rows, what fraction come from this field?
+           (These are mutually exclusive and sum to 1.0.)
+
+    Parameters
+    ----------
+    fp_diagnostic_dataframe : pd.DataFrame
+        Output of compute_fp_diagnostic_columns.
+        Contains fp_wrong_{field} boolean columns and fp_wrong_fields_count.
+
+    confusion_categories : np.ndarray
+        String array with "TP", "FP", "FN", "TN" per row.
+        Used to count total FP rows.
+
+    query_label : str
+        Query identifier for printing and filename (e.g., "A", "B").
+
+    output_directory : Path
+        Directory to save the summary CSV.
+
+    timestamp_string : str
+        Timestamp for filename.
+
+    Returns
+    -------
+    dict[str, dict]
+        Keyed by field name (e.g., "animal_type").
+        Each value contains:
+        - wrong_count: int
+        - fp_rows_affected_proportion: float or None
+        - error_contribution_proportion: float or None
+
+    Notes
+    -----
+    Saves CSV to: {output_directory}/{query_label}_fp_diagnostic_summary_{timestamp}.csv
+    """
+    fp_total_count = int(np.sum(confusion_categories == "FP"))
+
+    # Identify the fp_wrong_ boolean columns (exclude fp_wrong_fields_count)
+    fp_wrong_columns = [
+        col for col in fp_diagnostic_dataframe.columns
+        if col.startswith("fp_wrong_") and col != "fp_wrong_fields_count"
+    ]
+
+    # Calculate total field-failure instances for error contribution denominator
+    # This is the sum of all fp_wrong_X values across all rows
+    total_field_failure_instances = 0
+    field_wrong_counts: dict[str, int] = {}
+
+    for column_name in fp_wrong_columns:
+        wrong_count = int(fp_diagnostic_dataframe[column_name].sum()) # type: ignore[arg-type]
+        field_wrong_counts[column_name] = wrong_count
+        total_field_failure_instances += wrong_count
+
+    # Build summary dict and prepare rows for CSV
+    field_summary: dict[str, dict] = {}
+    summary_rows_for_csv: list[dict] = []
+
+    print(f"\n  FP FIELD DIAGNOSTIC (Query {query_label}):")
+
+    if fp_total_count == 0:
+        print("    No false positives to diagnose.")
+        # Save empty CSV with headers only
+        empty_summary_df = pd.DataFrame(columns=[
+            "query_label",
+            "field_name",
+            "wrong_count",
+            "fp_rows_affected_proportion",
+            "error_contribution_proportion",
+        ])
+        filename = f"{query_label}_fp_diagnostic_summary_{timestamp_string}.csv"
+        filepath = output_directory / filename
+        empty_summary_df.to_csv(filepath, index=False)
+        print(f"    [SAVE] FP diagnostic summary saved: {filepath}")
+        return field_summary
+
+    print(f"    Total FP rows: {fp_total_count}")
+    print(f"    Total field-failure instances: {total_field_failure_instances}")
+    print()
+    print(f"    {'Field':<30} {'Wrong':>8} {'FP Rows':>12} {'Error':>12}")
+    print(f"    {'':30} {'Count':>8} {'Affected %':>12} {'Contrib %':>12}")
+    print(f"    {'-'*62}")
+
+    for column_name in fp_wrong_columns:
+        wrong_count = field_wrong_counts[column_name]
+
+        # Extract clean field name (remove "fp_wrong_" prefix)
+        field_name = column_name.replace("fp_wrong_", "")
+
+        # Metric 1: Proportion of FP rows affected by this field
+        # (overlapping - one row can fail multiple fields)
+        if fp_total_count > 0:
+            fp_rows_affected_proportion = wrong_count / fp_total_count
+        else:
+            fp_rows_affected_proportion = None
+
+        # Metric 2: Error contribution (mutually exclusive, sums to 1.0)
+        # What fraction of total field-failures come from this field?
+        if total_field_failure_instances > 0:
+            error_contribution_proportion = wrong_count / total_field_failure_instances
+        else:
+            error_contribution_proportion = None
+
+        field_summary[field_name] = {
+            "wrong_count": wrong_count,
+            "fp_rows_affected_proportion": fp_rows_affected_proportion,
+            "error_contribution_proportion": error_contribution_proportion,
+        }
+
+        summary_rows_for_csv.append({
+            "query_label": query_label,
+            "field_name": field_name,
+            "wrong_count": wrong_count,
+            "fp_rows_affected_proportion": fp_rows_affected_proportion,
+            "error_contribution_proportion": error_contribution_proportion,
+        })
+
+        # Format for display
+        affected_display = (
+            f"{fp_rows_affected_proportion * 100:.2f}%"
+            if fp_rows_affected_proportion is not None else "N/A"
+        )
+        contrib_display = (
+            f"{error_contribution_proportion * 100:.2f}%"
+            if error_contribution_proportion is not None else "N/A"
+        )
+
+        print(
+            f"    {field_name:<30} {wrong_count:>8} {affected_display:>12} {contrib_display:>12}"
+        )
+
+    # Verify error contribution sums to ~100%
+    total_contribution = sum(
+        s["error_contribution_proportion"]
+        for s in field_summary.values()
+        if s["error_contribution_proportion"] is not None
+    )
+    print(f"    {'-'*62}")
+    print(f"    {'TOTAL':<30} {total_field_failure_instances:>8} {'(overlap)':>12} {total_contribution * 100:.2f}%")
+
+    # Report distribution of fp_wrong_fields_count among FP rows
+    fp_mask = confusion_categories == "FP"
+    if fp_total_count > 0:
+        fp_wrong_counts_among_fps = fp_diagnostic_dataframe.loc[
+            fp_mask, "fp_wrong_fields_count"
+        ]
+        print("\n    FP wrong-fields-count distribution (among FP rows):")
+        print(f"      Mean:   {fp_wrong_counts_among_fps.mean():.2f}")
+        print(f"      Median: {fp_wrong_counts_among_fps.median():.1f}")
+        print(f"      Min:    {fp_wrong_counts_among_fps.min()}")
+        print(f"      Max:    {fp_wrong_counts_among_fps.max()}")
+
+    # Save to CSV
+    summary_df = pd.DataFrame(summary_rows_for_csv)
+    filename = f"{query_label}_fp_diagnostic_summary_{timestamp_string}.csv"
+    filepath = output_directory / filename
+    summary_df.to_csv(filepath, index=False)
+    print(f"\n    [SAVE] FP diagnostic summary saved: {filepath}")
+
+    return field_summary
+
+
+def build_per_row_confusion_matrix_dataframe(
+    dataframe: pd.DataFrame,
+    similarity_scores: np.ndarray,
+    similarity_threshold: float,
+    ground_truth_boolean_array: np.ndarray,
+    query_filter_conditions: dict[str, tuple]
+) -> pd.DataFrame:
+    """
+    Build a per-row DataFrame with similarity, prediction, truth,
+    confusion class, AND FP diagnostic columns.
+
+    This DataFrame is the primary audit artifact. Any row can be inspected
+    to see why it was classified as TP, FP, FN, or TN, and for FP rows,
+    which specific filter fields the row fails on.
+
+    Parameters
+    ----------
+    dataframe : pd.DataFrame
+        Original full dataset. Must contain unique_id and all columns
+        referenced in query_filter_conditions.
+
     similarity_scores : np.ndarray
         Cosine similarity scores for all documents. Shape (n_rows,).
 
@@ -900,28 +1222,37 @@ def build_per_row_confusion_matrix_dataframe(
     ground_truth_boolean_array : np.ndarray
         Boolean ground truth for this query. Shape (n_rows,).
 
+    query_filter_conditions : dict[str, tuple]
+        Maps field names to (operator_string, threshold_value) tuples.
+        Used for FP diagnostic analysis.
+        Example: {"animal_type": ("==", "cat"), "can_fly": ("==", True)}
+
     Returns
     -------
     pd.DataFrame
         Columns:
+        - unique_id: int (from original dataset)
         - row_index: int (0-based position in original dataset)
-        - similarity_score: float (cosine similarity to query)
-        - similarity_threshold_used: float (constant, for audit trail)
-        - vector_predicted_match: bool (similarity > threshold)
-        - ground_truth_match: bool (tabular filter result)
+        - similarity_score: float
+        - similarity_threshold_used: float
+        - vector_predicted_match: bool
+        - ground_truth_match: bool
         - confusion_class: str ("TP", "FP", "FN", or "TN")
+        - fp_wrong_{field_name}: bool (one per filter condition)
+        - fp_wrong_fields_count: int
     """
-    # Compute vector predictions: does similarity exceed threshold?
+    # Compute vector predictions
     vector_predicted_boolean_array = similarity_scores > similarity_threshold
 
-    # Classify each row into confusion matrix category
+    # Classify each row
     confusion_categories = classify_rows_into_confusion_categories(
         ground_truth_boolean_array=ground_truth_boolean_array,
         vector_predicted_boolean_array=vector_predicted_boolean_array
     )
 
-    # Build DataFrame
+    # Build base DataFrame
     per_row_results_dataframe = pd.DataFrame({
+        "unique_id": dataframe["unique_id"].values,
         "row_index": np.arange(len(similarity_scores)),
         "similarity_score": similarity_scores,
         "similarity_threshold_used": similarity_threshold,
@@ -930,8 +1261,20 @@ def build_per_row_confusion_matrix_dataframe(
         "confusion_class": confusion_categories,
     })
 
-    return per_row_results_dataframe
+    # Compute FP diagnostic columns
+    fp_diagnostic_dataframe = compute_fp_diagnostic_columns(
+        dataframe=dataframe,
+        confusion_categories=confusion_categories,
+        query_filter_conditions=query_filter_conditions,
+    )
 
+    # Concatenate base results with FP diagnostics
+    per_row_results_dataframe = pd.concat(
+        [per_row_results_dataframe, fp_diagnostic_dataframe],
+        axis=1,
+    )
+
+    return per_row_results_dataframe
 
 # =============================================================================
 # GROUND TRUTH TABLE CONSTRUCTION AND SAVING
@@ -1084,6 +1427,7 @@ def save_per_query_confusion_matrix_csv(
 # =============================================================================
 # SUMMARY REPORT CSV SAVING
 # =============================================================================
+
 
 def save_summary_report_csv(
     all_query_summaries: list[dict],
@@ -1600,6 +1944,7 @@ def vector_query_e_count_cats_5_field_stress_test(
 # RESULTS ANALYSIS AND REPORTING
 # =============================================================================
 
+
 def calculate_error_metrics(
     ground_truth_count: int,
     vector_count: int
@@ -1904,6 +2249,7 @@ def print_summary_table(query_summaries: list[dict]) -> None:
 # MAIN EXECUTION FUNCTION
 # =============================================================================
 
+
 def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
     """
     Execute complete MVP-1 test suite: Queries A through E.
@@ -2055,7 +2401,7 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
 
     all_query_summaries = []
 
-    # --- A list of query configurations to iterate through ---
+    # --- list of query configurations to iterate through ---
     # Each entry: (label, description, tabular_func, vector_func, ground_truth_array, extra_kwargs)
     # This structure avoids copy-paste repetition while keeping each query distinct.
 
@@ -2067,11 +2413,18 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         corpus_embeddings, embedding_model, VECTOR_SIMILARITY_THRESHOLD
     )
 
-    # Build and save per-row confusion matrix for Query A
+    # Define filter conditions for Query A: single field
+    query_a_filter_conditions = {
+        "animal_type": ("==", "cat"),
+    }
+
+    # Build and save per-row confusion matrix with FP diagnostics
     per_row_results_a = build_per_row_confusion_matrix_dataframe(
+        dataframe=dataframe,
         similarity_scores=vector_result_a["similarities"],
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_a # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_a,  # type: ignore[arg-type]
+        query_filter_conditions=query_a_filter_conditions,
     )
     save_per_query_confusion_matrix_csv(
         per_row_results_a, "A", output_directory, timestamp_string
@@ -2083,9 +2436,18 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         tabular_count=tabular_count_a,
         vector_result=vector_result_a,
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_a # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_a,  # type: ignore[arg-type]
     )
     all_query_summaries.append(summary_a)
+
+    # FP diagnostic summary for Query A
+    summarize_fp_diagnostic_columns(
+        fp_diagnostic_dataframe=per_row_results_a,
+        confusion_categories=per_row_results_a["confusion_class"].values, # type: ignore[arg-type]
+        query_label="A",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+    )
 
     # ----- Query B -----
     print("\n[RUNNING] Query B: How many cats that can fly?")
@@ -2095,10 +2457,18 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         corpus_embeddings, embedding_model, VECTOR_SIMILARITY_THRESHOLD
     )
 
+    # Define filter conditions for Query B: animal type + one boolean
+    query_b_filter_conditions = {
+        "animal_type": ("==", "cat"),
+        "can_fly": ("==", True),
+    }
+
     per_row_results_b = build_per_row_confusion_matrix_dataframe(
+        dataframe=dataframe,
         similarity_scores=vector_result_b["similarities"],
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_b # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_b,  # type: ignore[arg-type]
+        query_filter_conditions=query_b_filter_conditions,
     )
     save_per_query_confusion_matrix_csv(
         per_row_results_b, "B", output_directory, timestamp_string
@@ -2110,9 +2480,17 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         tabular_count=tabular_count_b,
         vector_result=vector_result_b,
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_b # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_b,  # type: ignore[arg-type]
     )
     all_query_summaries.append(summary_b)
+
+    summarize_fp_diagnostic_columns(
+        fp_diagnostic_dataframe=per_row_results_b,
+        confusion_categories=per_row_results_b["confusion_class"].values, # type: ignore[arg-type]
+        query_label="B",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+    )
 
     # ----- Query C -----
     print(f"\n[RUNNING] Query C: How many cats born after {time_threshold_year}?")
@@ -2125,10 +2503,18 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         time_threshold_year
     )
 
+    # Define filter conditions for Query C: animal type + time
+    query_c_filter_conditions = {
+        "animal_type": ("==", "cat"),
+        "birth_unix": (">", time_threshold_unix),
+    }
+
     per_row_results_c = build_per_row_confusion_matrix_dataframe(
+        dataframe=dataframe,
         similarity_scores=vector_result_c["similarities"],
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_c # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_c,  # type: ignore[arg-type]
+        query_filter_conditions=query_c_filter_conditions,
     )
     save_per_query_confusion_matrix_csv(
         per_row_results_c, "C", output_directory, timestamp_string
@@ -2140,9 +2526,17 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         tabular_count=tabular_count_c,
         vector_result=vector_result_c,
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_c # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_c,  # type: ignore[arg-type]
     )
     all_query_summaries.append(summary_c)
+
+    summarize_fp_diagnostic_columns(
+        fp_diagnostic_dataframe=per_row_results_c,
+        confusion_categories=per_row_results_c["confusion_class"].values, # type: ignore[arg-type]
+        query_label="C",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+    )
 
     # ----- Query D -----
     print(f"\n[RUNNING] Query D: Cats born after {time_threshold_year} that can fly?")
@@ -2155,10 +2549,19 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         time_threshold_year
     )
 
+    # Define filter conditions for Query D: animal type + time + one boolean
+    query_d_filter_conditions = {
+        "animal_type": ("==", "cat"),
+        "birth_unix": (">", time_threshold_unix),
+        "can_fly": ("==", True),
+    }
+
     per_row_results_d = build_per_row_confusion_matrix_dataframe(
+        dataframe=dataframe,
         similarity_scores=vector_result_d["similarities"],
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_d # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_d,  # type: ignore[arg-type]
+        query_filter_conditions=query_d_filter_conditions,
     )
     save_per_query_confusion_matrix_csv(
         per_row_results_d, "D", output_directory, timestamp_string
@@ -2170,9 +2573,17 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         tabular_count=tabular_count_d,
         vector_result=vector_result_d,
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_d # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_d, # type: ignore[arg-type]
     )
     all_query_summaries.append(summary_d)
+
+    summarize_fp_diagnostic_columns(
+        fp_diagnostic_dataframe=per_row_results_d,
+        confusion_categories=per_row_results_d["confusion_class"].values, # type: ignore[arg-type]
+        query_label="D",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+    )
 
     # ----- Query E -----
     print("\n[RUNNING] Query E: Stress test (cat + time + 5 data-derived fields)")
@@ -2191,7 +2602,7 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         cat_median_weight_kg=query_e_thresholds["cat_median_weight_kg"],
         cat_median_height_cm=query_e_thresholds["cat_median_height_cm"],
         cat_median_daily_food_grams=query_e_thresholds["cat_median_daily_food_grams"],
-        cat_majority_can_run=query_e_thresholds["cat_majority_can_run"]
+        cat_majority_can_run=query_e_thresholds["cat_majority_can_run"],
     )
 
     print(f"  [GROUND TRUTH CHECK] Tabular count for Query E: {tabular_count_e}")
@@ -2199,21 +2610,32 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         print("  [WARNING] Ground truth is 0. Vector comparison will not be meaningful.")
 
     vector_result_e = vector_query_e_count_cats_5_field_stress_test(
-            corpus_embeddings=corpus_embeddings,
-            embedding_model=embedding_model,
-            similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-            time_threshold_year=time_threshold_year,
-            cat_median_weight_kg=query_e_thresholds["cat_median_weight_kg"],
-            cat_median_height_cm=query_e_thresholds["cat_median_height_cm"],
-            cat_median_daily_food_grams=query_e_thresholds["cat_median_daily_food_grams"],
-            cat_majority_can_run=query_e_thresholds["cat_majority_can_run"]
-        )
+        corpus_embeddings=corpus_embeddings,
+        embedding_model=embedding_model,
+        similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
+        time_threshold_year=time_threshold_year,
+        cat_median_weight_kg=query_e_thresholds["cat_median_weight_kg"],
+        cat_median_height_cm=query_e_thresholds["cat_median_height_cm"],
+        cat_median_daily_food_grams=query_e_thresholds["cat_median_daily_food_grams"],
+        cat_majority_can_run=query_e_thresholds["cat_majority_can_run"],
+    )
 
-    # Build and save per-row confusion matrix for Query E
+    # Define filter conditions for Query E: 6 fields (animal + time + 4 numeric/boolean)
+    query_e_filter_conditions = {
+        "animal_type": ("==", "cat"),
+        "birth_unix": (">", time_threshold_unix),
+        "weight_kg": (">", query_e_thresholds["cat_median_weight_kg"]),
+        "height_cm": ("<", query_e_thresholds["cat_median_height_cm"]),
+        "daily_food_grams": (">", query_e_thresholds["cat_median_daily_food_grams"]),
+        "can_run": ("==", query_e_thresholds["cat_majority_can_run"]),
+    }
+
     per_row_results_e = build_per_row_confusion_matrix_dataframe(
+        dataframe=dataframe,
         similarity_scores=vector_result_e["similarities"],
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_e # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_e,  # type: ignore[arg-type]
+        query_filter_conditions=query_e_filter_conditions,
     )
     save_per_query_confusion_matrix_csv(
         per_row_results_e, "E", output_directory, timestamp_string
@@ -2225,9 +2647,17 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         tabular_count=tabular_count_e,
         vector_result=vector_result_e,
         similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
-        ground_truth_boolean_array=ground_truth_e # type: ignore[arg-type]
+        ground_truth_boolean_array=ground_truth_e,  # type: ignore[arg-type]
     )
     all_query_summaries.append(summary_e)
+
+    summarize_fp_diagnostic_columns(
+        fp_diagnostic_dataframe=per_row_results_e,
+        confusion_categories=per_row_results_e["confusion_class"].values, # type: ignore[arg-type]
+        query_label="E",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+    )
 
     # -------------------------------------------------------------------------
     # Step 9: Print summary table
@@ -2279,6 +2709,7 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
 # =============================================================================
 # ENTRY POINT
 # =============================================================================
+
 
 def main() -> None:
     """
