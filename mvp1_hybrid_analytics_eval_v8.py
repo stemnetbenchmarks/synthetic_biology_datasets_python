@@ -1803,10 +1803,7 @@ def vector_query_c_count_cats_born_after_time(
     dict
         Contains count, similarities, query_text, elapsed_seconds.
     """
-    query_text = (
-        f"A cat, feline, born after the year {time_threshold_year}. "
-        f"A recently born cat."
-    )
+    query_text = f"A cat, feline, born after the year {time_threshold_year}."
 
     start_time = time.time()
     query_embedding = embed_single_query(query_text, embedding_model)
@@ -1852,7 +1849,7 @@ def vector_query_d_count_cats_born_after_time_can_fly(
     """
     query_text = (
         f"A cat, feline, born after the year {time_threshold_year}, "
-        f"that can fly. A flying cat born recently."
+        f"that can fly."
     )
 
     start_time = time.time()
