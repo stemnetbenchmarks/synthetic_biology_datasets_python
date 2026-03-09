@@ -75,6 +75,8 @@ import pandas as pd
 from numpy.linalg import norm
 from sentence_transformers import SentenceTransformer
 
+from sklearn.decomposition import PCA
+import plotly.graph_objects as go
 
 # =============================================================================
 # CONFIGURATION CONSTANTS
@@ -2243,6 +2245,435 @@ def print_summary_table(query_summaries: list[dict]) -> None:
 
 
 # =============================================================================
+# 3D PCA VISUALIZATION FUNCTIONS
+# =============================================================================
+
+
+def generate_single_query_pca_plot(
+    corpus_embeddings: np.ndarray,
+    similarities: np.ndarray,
+    ground_truth_boolean_array: np.ndarray,
+    similarity_threshold: float,
+    query_text: str,
+    embedding_model: SentenceTransformer,
+    query_label: str,
+    output_directory: Path,
+    timestamp_string: str,
+    pca_model: PCA | None = None,
+) -> PCA:
+    """
+    Generate a 3D PCA scatter plot for a single query showing confusion classes.
+
+    Each corpus document is classified as TP, FP, FN, or TN based on
+    ground truth and vector similarity threshold, then plotted in 3D
+    PCA space with distinct colors per class.
+
+    The query vector is embedded, projected into the same PCA space,
+    and displayed as a diamond marker.
+
+    PCA is fitted on corpus_embeddings if no pre-fitted model is provided.
+    The fitted model is returned for reuse across subsequent queries.
+
+    Parameters
+    ----------
+    corpus_embeddings : np.ndarray
+        Pre-computed document embeddings, shape (n_docs, 384).
+
+    similarities : np.ndarray
+        Cosine similarity scores for this query, shape (n_docs,).
+
+    ground_truth_boolean_array : np.ndarray
+        Boolean ground truth for this query, shape (n_docs,).
+
+    similarity_threshold : float
+        Threshold used for vector match determination.
+
+    query_text : str
+        The natural language query text that was embedded.
+
+    embedding_model : SentenceTransformer
+        Model used to embed the query text.
+
+    query_label : str
+        Short identifier for the query (e.g., "A", "B", "C", "D", "E").
+
+    output_directory : Path
+        Directory to save the HTML output file.
+
+    timestamp_string : str
+        Timestamp string for filename uniqueness.
+
+    pca_model : PCA or None
+        Pre-fitted PCA model from a previous call. If None, a new
+        PCA(n_components=3) is fitted on corpus_embeddings. Pass the
+        returned model to subsequent calls so all plots share the
+        same 3D projection space.
+
+    Returns
+    -------
+    PCA
+        The fitted PCA model (newly fitted or the one passed in).
+
+    Raises
+    ------
+    Exception
+        Logged with traceback if plot generation fails.
+        Does NOT re-raise — a visualization failure should not halt
+        the test suite. Returns pca_model (possibly None) on failure.
+
+    Notes
+    -----
+    Output file: {query_label}_pca_3d_{timestamp_string}.html
+    The HTML file is fully self-contained (plotly.js is inlined).
+
+    Confusion class definitions:
+        TP: ground_truth=True  AND similarity > threshold (correctly matched)
+        FP: ground_truth=False AND similarity > threshold (incorrectly matched)
+        FN: ground_truth=True  AND similarity <= threshold (missed)
+        TN: ground_truth=False AND similarity <= threshold (correctly excluded)
+    """
+    try:
+        print(f"[VIZ] Generating 3D PCA plot for Query {query_label}...")
+
+        # ---- Step 1: Fit or reuse PCA model ----
+        if pca_model is None:
+            print("[VIZ] Fitting PCA(n_components=3) on corpus embeddings...")
+            pca_model = PCA(n_components=3, random_state=RANDOM_SEED)
+            pca_model.fit(corpus_embeddings)
+            explained_variance_total = float(
+                np.sum(pca_model.explained_variance_ratio_)
+            )
+            print(
+                f"[VIZ] PCA explained variance (3 components): "
+                f"{explained_variance_total:.4f}"
+            )
+        else:
+            print("[VIZ] Reusing pre-fitted PCA model.")
+
+        # ---- Step 2: Transform corpus to 3D ----
+        corpus_3d = pca_model.transform(corpus_embeddings)
+
+        # ---- Step 3: Embed query and project into PCA space ----
+        query_embedding = embed_single_query(query_text, embedding_model)
+        query_3d = pca_model.transform(query_embedding.reshape(1, -1))[0]
+
+        # ---- Step 4: Classify each corpus point as TP/FP/FN/TN ----
+        vector_predicted = similarities > similarity_threshold
+        confusion_categories = classify_rows_into_confusion_categories(
+            ground_truth_boolean_array=ground_truth_boolean_array,
+            vector_predicted_boolean_array=vector_predicted,
+        )
+
+        # ---- Step 5: Define colors and build traces ----
+        confusion_config = {
+            "TP": {"color": "green", "name": "True Positive"},
+            "FP": {"color": "red", "name": "False Positive"},
+            "FN": {"color": "orange", "name": "False Negative"},
+            "TN": {"color": "lightgray", "name": "True Negative"},
+        }
+
+        fig = go.Figure()
+
+        for confusion_key, config in confusion_config.items():
+            mask = confusion_categories == confusion_key
+            point_count = int(np.sum(mask))
+
+            if point_count == 0:
+                continue
+
+            # Build hover text: row index, similarity score, confusion class
+            hover_texts = [
+                (
+                    f"Row {idx}<br>"
+                    f"Similarity: {similarities[idx]:.4f}<br>"
+                    f"Class: {confusion_key}"
+                )
+                for idx in np.where(mask)[0]
+            ]
+
+            fig.add_trace(go.Scatter3d(
+                x=corpus_3d[mask, 0],
+                y=corpus_3d[mask, 1],
+                z=corpus_3d[mask, 2],
+                mode="markers",
+                marker=dict(
+                    size=3,
+                    color=config["color"],
+                    opacity=0.6,
+                ),
+                name=f"{config['name']} ({point_count})",
+                text=hover_texts,
+                hoverinfo="text",
+            ))
+
+        # ---- Step 6: Add query point marker ----
+        fig.add_trace(go.Scatter3d(
+            x=[query_3d[0]],
+            y=[query_3d[1]],
+            z=[query_3d[2]],
+            mode="markers+text",
+            marker=dict(
+                size=12,
+                color="purple",
+                symbol="diamond",
+                line=dict(width=2, color="black"),
+            ),
+            name="Query",
+            text=["Query"],
+            textposition="top center",
+            hovertext=f"Query: {query_text[:80]}",
+            hoverinfo="text",
+        ))
+
+        # ---- Step 7: Layout and title ----
+        plot_title = (
+            f"Query {query_label} — Confusion 3D PCA<br>"
+            f"<sub>\"{query_text[:70]}\" | "
+            f"Threshold: {similarity_threshold}</sub>"
+        )
+
+        fig.update_layout(
+            title=plot_title,
+            scene=dict(
+                xaxis_title="PC1",
+                yaxis_title="PC2",
+                zaxis_title="PC3",
+            ),
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=0.01,
+            ),
+            margin=dict(l=0, r=0, b=0, t=80),
+        )
+
+        # ---- Step 8: Save HTML ----
+        filename = f"{query_label}_pca_3d_{timestamp_string}.html"
+        filepath = output_directory / filename
+
+        fig.write_html(
+            str(filepath),
+            include_plotlyjs=True,
+            full_html=True,
+        )
+
+        print(f"[VIZ] Saved: {filepath}")
+
+        return pca_model
+
+    except Exception as visualization_error:
+        print(
+            f"[ERROR] Failed to generate PCA plot "
+            f"for Query {query_label}: {visualization_error}"
+        )
+        traceback.print_exc()
+        # Return pca_model even on failure so subsequent queries can still try
+        return pca_model  # type: ignore[return-value]
+
+
+def generate_multi_query_pca_plot(
+    corpus_embeddings: np.ndarray,
+    query_records: list[dict],
+    embedding_model: SentenceTransformer,
+    dataframe: pd.DataFrame,
+    pca_model: PCA,
+    output_directory: Path,
+    timestamp_string: str,
+) -> None:
+    """
+    Generate a 3D PCA scatter plot showing all query vectors (A-E)
+    together in the same embedding space.
+
+    The corpus is shown as background points colored by animal_type.
+    Each query vector is plotted as a labeled diamond marker, allowing
+    visual comparison of where different query formulations land
+    relative to each other and to the corpus.
+
+    This reveals whether adding filters (fly, born-after, etc.)
+    actually moves the query vector meaningfully in embedding space.
+
+    Parameters
+    ----------
+    corpus_embeddings : np.ndarray
+        Pre-computed document embeddings, shape (n_docs, 384).
+
+    query_records : list[dict]
+        One dict per query, each containing:
+            - "label": str (e.g., "A")
+            - "query_text": str (the embedded query text)
+
+    embedding_model : SentenceTransformer
+        Model used to embed query texts.
+
+    dataframe : pd.DataFrame
+        Original dataset. Used for animal_type column to color
+        corpus points.
+
+    pca_model : PCA
+        Pre-fitted PCA model (fitted during queries A-E).
+
+    output_directory : Path
+        Directory to save the HTML output file.
+
+    timestamp_string : str
+        Timestamp string for filename uniqueness.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    Exception
+        Logged with traceback if plot generation fails.
+        Does NOT re-raise — visualization failure should not halt
+        the test suite.
+
+    Notes
+    -----
+    Output file: multi_query_pca_3d_{timestamp_string}.html
+    The HTML is fully self-contained.
+
+    This function requires a pre-fitted pca_model. It does not fit PCA
+    itself, because it is always called after the per-query plots have
+    already fitted and reused the model.
+    """
+    try:
+        print("[VIZ] Generating multi-query comparison 3D PCA plot...")
+
+        # ---- Step 1: Transform corpus to 3D ----
+        corpus_3d = pca_model.transform(corpus_embeddings)
+
+        # ---- Step 2: Color corpus by animal_type ----
+        animal_type_color_map = {
+            "cat": "orange",
+            "dog": "dodgerblue",
+            "bird": "green",
+            "fish": "teal",
+            "turtle": "brown",
+        }
+
+        fig = go.Figure()
+
+        animal_types_in_data = dataframe["animal_type"].unique()
+
+        for animal_type in animal_types_in_data:
+            mask = (dataframe["animal_type"] == animal_type).values
+            point_count = int(np.sum(mask))
+
+            # Use mapped color, fallback to gray for unexpected types
+            point_color = animal_type_color_map.get(animal_type, "gray")
+
+            hover_texts = [
+                f"Row {idx}<br>Type: {animal_type}"
+                for idx in np.where(mask)[0]
+            ]
+
+            fig.add_trace(go.Scatter3d(
+                x=corpus_3d[mask, 0],
+                y=corpus_3d[mask, 1],
+                z=corpus_3d[mask, 2],
+                mode="markers",
+                marker=dict(
+                    size=2,
+                    color=point_color,
+                    opacity=0.3,
+                ),
+                name=f"{animal_type} ({point_count})",
+                text=hover_texts,
+                hoverinfo="text",
+            ))
+
+        # ---- Step 3: Embed each query and project into PCA space ----
+        # Distinct colors for each query point so they are distinguishable
+        query_point_colors = [
+            "red",       # A
+            "darkgreen",  # B
+            "purple",    # C
+            "black",     # D
+            "magenta",   # E
+        ]
+
+        for query_index, query_record in enumerate(query_records):
+            query_label = query_record["label"]
+            query_text = query_record["query_text"]
+
+            # Embed and project
+            query_embedding = embed_single_query(query_text, embedding_model)
+            query_3d = pca_model.transform(
+                query_embedding.reshape(1, -1)
+            )[0]
+
+            # Pick color, cycling if more than 5 queries somehow
+            point_color = query_point_colors[
+                query_index % len(query_point_colors)
+            ]
+
+            fig.add_trace(go.Scatter3d(
+                x=[query_3d[0]],
+                y=[query_3d[1]],
+                z=[query_3d[2]],
+                mode="markers+text",
+                marker=dict(
+                    size=14,
+                    color=point_color,
+                    symbol="diamond",
+                    line=dict(width=2, color="black"),
+                ),
+                name=f"Query {query_label}",
+                text=[f"Q{query_label}"],
+                textposition="top center",
+                hovertext=(
+                    f"Query {query_label}<br>"
+                    f"{query_text[:100]}"
+                ),
+                hoverinfo="text",
+            ))
+
+        # ---- Step 4: Layout and title ----
+        plot_title = (
+            "All Queries (A–E) in PCA 3D Space<br>"
+            "<sub>Corpus colored by animal type | "
+            "Query diamonds show where each query lands</sub>"
+        )
+
+        fig.update_layout(
+            title=plot_title,
+            scene=dict(
+                xaxis_title="PC1",
+                yaxis_title="PC2",
+                zaxis_title="PC3",
+            ),
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=0.01,
+            ),
+            margin=dict(l=0, r=0, b=0, t=80),
+        )
+
+        # ---- Step 5: Save HTML ----
+        filename = f"multi_query_pca_3d_{timestamp_string}.html"
+        filepath = output_directory / filename
+
+        fig.write_html(
+            str(filepath),
+            include_plotlyjs=True,
+            full_html=True,
+        )
+
+        print(f"[VIZ] Saved: {filepath}")
+
+    except Exception as visualization_error:
+        print(
+            f"[ERROR] Failed to generate multi-query PCA plot: "
+            f"{visualization_error}"
+        )
+        traceback.print_exc()
+
+# =============================================================================
 # MAIN EXECUTION FUNCTION
 # =============================================================================
 
@@ -2353,6 +2784,12 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
 
     corpus_embeddings = generate_corpus_embeddings(description_texts, embedding_model)
 
+    # PCA model fitted once on Query A, reused for all subsequent plots
+    pca_model = None
+
+    # Collect query texts for the multi-query comparison plot (6th plot)
+    query_records_for_multi_plot = []
+
     # -------------------------------------------------------------------------
     # Step 6: Compute Query E thresholds from data
     # -------------------------------------------------------------------------
@@ -2446,6 +2883,24 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         timestamp_string=timestamp_string,
     )
 
+    # 3D PCA visualization for Query A
+    pca_model = generate_single_query_pca_plot(
+        corpus_embeddings=corpus_embeddings,
+        similarities=vector_result_a["similarities"],
+        ground_truth_boolean_array=ground_truth_a,
+        similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
+        query_text=vector_result_a["query_text"],
+        embedding_model=embedding_model,
+        query_label="A",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+        pca_model=pca_model,
+    )
+    query_records_for_multi_plot.append({
+        "label": "A",
+        "query_text": vector_result_a["query_text"],
+    })
+
     # ----- Query B -----
     print("\n[RUNNING] Query B: How many cats that can fly?")
 
@@ -2488,6 +2943,24 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         output_directory=output_directory,
         timestamp_string=timestamp_string,
     )
+
+    # 3D PCA visualization for Query B
+    pca_model = generate_single_query_pca_plot(
+        corpus_embeddings=corpus_embeddings,
+        similarities=vector_result_b["similarities"],
+        ground_truth_boolean_array=ground_truth_b,
+        similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
+        query_text=vector_result_b["query_text"],
+        embedding_model=embedding_model,
+        query_label="B",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+        pca_model=pca_model,
+    )
+    query_records_for_multi_plot.append({
+        "label": "B",
+        "query_text": vector_result_b["query_text"],
+    })
 
     # ----- Query C -----
     print(f"\n[RUNNING] Query C: How many cats born after {time_threshold_year}?")
@@ -2535,6 +3008,24 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         timestamp_string=timestamp_string,
     )
 
+    # 3D PCA visualization for Query C
+    pca_model = generate_single_query_pca_plot(
+        corpus_embeddings=corpus_embeddings,
+        similarities=vector_result_c["similarities"],
+        ground_truth_boolean_array=ground_truth_c,
+        similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
+        query_text=vector_result_c["query_text"],
+        embedding_model=embedding_model,
+        query_label="C",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+        pca_model=pca_model,
+    )
+    query_records_for_multi_plot.append({
+        "label": "C",
+        "query_text": vector_result_c["query_text"],
+    })
+
     # ----- Query D -----
     print(f"\n[RUNNING] Query D: Cats born after {time_threshold_year} that can fly?")
 
@@ -2581,6 +3072,24 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         output_directory=output_directory,
         timestamp_string=timestamp_string,
     )
+
+    # 3D PCA visualization for Query D
+    pca_model = generate_single_query_pca_plot(
+        corpus_embeddings=corpus_embeddings,
+        similarities=vector_result_d["similarities"],
+        ground_truth_boolean_array=ground_truth_d,
+        similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
+        query_text=vector_result_d["query_text"],
+        embedding_model=embedding_model,
+        query_label="D",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+        pca_model=pca_model,
+    )
+    query_records_for_multi_plot.append({
+        "label": "D",
+        "query_text": vector_result_d["query_text"],
+    })
 
     # ----- Query E -----
     print("\n[RUNNING] Query E: Stress test (cat + time + 5 data-derived fields)")
@@ -2656,6 +3165,40 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         timestamp_string=timestamp_string,
     )
 
+    # 3D PCA visualization for Query E
+    pca_model = generate_single_query_pca_plot(
+        corpus_embeddings=corpus_embeddings,
+        similarities=vector_result_e["similarities"],
+        ground_truth_boolean_array=ground_truth_e,
+        similarity_threshold=VECTOR_SIMILARITY_THRESHOLD,
+        query_text=vector_result_e["query_text"],
+        embedding_model=embedding_model,
+        query_label="E",
+        output_directory=output_directory,
+        timestamp_string=timestamp_string,
+        pca_model=pca_model,
+    )
+    query_records_for_multi_plot.append({
+        "label": "E",
+        "query_text": vector_result_e["query_text"],
+    })
+
+    # -------------------------------------------------------------------------
+    # 6th PCA
+    # -------------------------------------------------------------------------
+
+    # ---- 6th plot: All queries compared in same PCA space ----
+    if pca_model is not None:
+        generate_multi_query_pca_plot(
+            corpus_embeddings=corpus_embeddings,
+            query_records=query_records_for_multi_plot,
+            embedding_model=embedding_model,
+            dataframe=dataframe,
+            pca_model=pca_model,
+            output_directory=output_directory,
+            timestamp_string=timestamp_string,
+        )
+
     # -------------------------------------------------------------------------
     # Step 9: Print summary table
     # -------------------------------------------------------------------------
@@ -2701,6 +3244,7 @@ def run_mvp1_test_suite(csv_file_path: str) -> list[dict]:
         print(f"    {saved_file.name}")
 
     return all_query_summaries
+
 
 
 # =============================================================================

@@ -7,3 +7,4 @@ scikit-learn
 statsmodels
 textblob
 wordcloud
+plotly
