@@ -1,24 +1,46 @@
 Evaluating Vector & Hybrid Data Analytics
 
-Mapping Unstructured-Analytics Problem-Spaces:
+Mapping Unstructured-Analytics Problem-Spaces: 
 Comparing Methods, Performance and Tradeoffs Using Vector, Generative, & Assorted Tools to Perform Analytics on Structured & Unstructured Data
 2026.02.26-03.08 G.G.Ashbrook
 
 
-# Intro:
+## Introduction
+
+Especially given the rise of deep learning, foundation models, generative models and "embedding" concept-vector models, it is important to define what you are doing clearly enough to identify what the most appropriate tools are for your project.*
+
+Consistent with the history of STEM (including project-management) whenever we are asking a question, or posing a query, it is important to understand and to define our questions using feedback from tests and evaluations in an iterative workflow, not shooting from the hip once and betting that we hit the right something. 
+
+#### There must be:
+1. Definition
+2. Feedback (including tests and experiments)
+3. Use of data from feedback
+4. Iteration (improving the definition in step one, etc.)
+
+This report articulates some of the steps, factors, starting organization, and other suggestions, if only at a cursory starting depth (considering the vastness of this topic), using a classic-generic-context of 'cats and animals on the internet' for the data.
+
+There are also several code-tools in python3 that you can use (likely modified by you for your own project) that go along with this report for you to use to get the information that you will need to define your questions using the feedback-data that will come from the tests and evaluations that you craft.
+
+
+*(See: github.com/lineality/known_class_classification_workflow_datascience )
+
+
+
+
+# Getting Started
 One reason why it is good to have an abstract 'base-came' or 'square one' or 'home base' framework, is that it is easy to become unmoored and lost after a few design decisions, no longer knowing where you are going, where you are, or how to evaluate what you are planning.
 
-Having an abstract problem-space map can help to stay oriented in real-life confusion situations.
+Having an abstract problem-space map can help to stay oriented in real-life confusion situations. 
 
-As a warning, there will likely be future cases where a problem-space is significantly undefined, where the question and the quality of the answer are both highly subjective and highly noisy (e.g. See Khaneman/Tversy for an extensive systematic problem-space of known perception/articulation/decision/communication problems.). In some of these cases a combination of back-of-the-knapkin and vague-feedback will be fine, but in other (perhaps most) situations the noise will overwhelm the signal, and to propose an answer to Steve Gibson's question:
+As a warning, there will likely be future cases where a problem-space is significantly undefined, where the question and the quality of the answer are both highly subjective and highly noisy (e.g. See Khaneman/Tversy for an extensive systematic problem-space of known perception/articulation/decision/communication problems.). In some of these cases a combination of back-of-the-knapkin and vague-feedback will be fine, but in other (perhaps most) situations the noise will overwhelm the signal, and to propose an answer to Steve Gibson's question: 
 Q: What happens when you remove the science from computer science?
 A: The result is a fantasy that is divorced from reality, moreover a fantasy that doubles-down on more-fantasy when empirical breakdown and collapse results, preventing the identification and solution of problems, which prevents corrections, maintainability, sustainability, and survival.
 
 Glossary Note: The term 'hybrid' here is meant to refer to any combination of any number of methods, not meant to refer to a specific combination: hybrid vs. single-method.
 
-Preliminary results from these tools and this type of analysis support most expected results, such as that more nuanced and scaled-up/compounded queries produce fuzzier results, and that smaller older models perform noticeably worse at specific tasks (such as recognizing pedantic numbers rather than common class labels (for generative-model data structuring)).
+Preliminary results from these tools and this type of analysis support most expected results, such as that more nuanced and scaled-up/compounded queries produce fuzzier results, and that smaller older models perform noticeably worse at specific tasks (such as recognizing pedantic numbers rather than common class labels (for generative-model data structuring)). 
 
-This aims to be a very constrained-narrow but concrete base-camp from which a very large number of possible and modularly recombinant questions can be extended.
+This aims to be a very constrained-narrow but concrete base-camp from which a very large number of possible and modularly recombinant questions can be extended. 
 
 ## MVP-1 Code-Utilities Outline:
 https://github.com/stemnetbenchmarks/synthetic_biology_datasets_python
@@ -26,11 +48,11 @@ https://github.com/stemnetbenchmarks/synthetic_biology_datasets_python
 1. Synthetic Data Generation & Processing
 2. Vector Database for Testing
 
-3. Single Query Tests: Notebook to compare the results of the four types of
+3. Single Query Tests: Notebook to compare the results of the four types of 
 - 5 tests with granular reporting
 - HTML-dashboard of results (and .csv results files)
 
-4. Comparative Query Tests:
+4. Comparative Query Tests: 
 - A-D (not E), comparing stronger signal for Cat vs. Dog
 - e.g. "Are there more Cat-etc or Dog-etc results?"
 
@@ -48,20 +70,20 @@ https://github.com/stemnetbenchmarks/synthetic_biology_datasets_python
 
 Between these four areas, how much can we quantify, and provide modular testing platforms for per-project evaluation, for the tradeoffs and use-case-appropriateness or these four types/categories of query-tech-stack:
 
-#### A. Tabular-Structured Queries/Analytics,
-#### B. Vector Queries/Analytics,
-#### C. Structuring/Extraction Queries/Analytics,
-#### D. Hybrid Queries/Analytics (Any structured data + any vector data, often including analyzing and comparing the results of vector searches, such as chunk quantities and chunk distances, but in some cases chunk-metadata extracted from matched chunks may be the target result rather than the quantity or distance of the chunks in question; or the target may be pattern analysis on N (e.g. 1000) vector-queries).
+#### A. Tabular-Structured Queries/Analytics, 
+#### B. Vector Queries/Analytics, 
+#### C. Structuring/Extraction Queries/Analytics, 
+#### D. Hybrid Queries/Analytics (Any structured data + any vector data, often including analyzing and comparing the results of vector searches, such as chunk quantities and chunk distances, but in some cases chunk-metadata extracted from matched chunks may be the target result rather than the quantity or distance of the chunks in question; or the target may be pattern analysis on N (e.g. 1000) vector-queries). 
 
 
-- Structured tabular has worked for many years, but the overhead of setting up the data and databases and maintaining those is not always practical and feasible. The quagmire of database, data-wearhouse, and data-lake, and data-silo management is a vast area with ever more per-case tools and possible solutions (each with tradeoffs, and often significant costs over time (the cost of simply running one (even un-used) large PostgreSQL database in the cloud is larger than the budget of most startups).
+- Structured tabular has worked for many years, but the overhead of setting up the data and databases and maintaining those is not always practical and feasible. The quagmire of database, data-wearhouse, and data-lake, and data-silo management is a vast area with ever more per-case tools and possible solutions (each with tradeoffs, and often significant costs over time (the cost of simply running one (even un-used) large PostgreSQL database in the cloud is larger than the budget of most startups). 
 
 - Vector search can be incredibly effective for single-document retrieval, but this does not help with many 'stateful' or 'analytic' type needs. A persistent benefit of simple vector search is the incredible open-ended-ness of uses: it is not rigidly made for one known narrow task only, but can be utilized for novel and ad-hoc queries.
 
-- Data-structuring/extraction can be a solution IF you know ahead of time what you want to extract, or if you have the resources to run a new extraction (as may be worthwhile if the question is not a one-off question).
+- Data-structuring/extraction can be a solution IF you know ahead of time what you want to extract, or if you have the resources to run a new extraction (as may be worthwhile if the question is not a one-off question). 
 
 ### Application Goals:
-An application-goal and scope of this study/paper is to emphasize the planning steps of:
+An application-goal and scope of this study/paper is to emphasize the planning steps of: 
 1. articulating what specific questions and ranges of questions are in scope
 2. evaluate what tools (or combinations of tools) do and do not match the questions in scope
 3. clearly define an MVP-1 that starts with the lowest hanging fruit inside that scope: queries on unstructured data that can be systematically evaluated for correctness (that have a known correct answer to which the system output can be reliably compared)
@@ -74,9 +96,9 @@ As I expect vector-analytics to be an ever-growing area with ever more diverse t
 
 How-many-chunks, and how-near-distance (either a normalized metric or using a threshold for 'close enough' for a known case, or some other configuration) are likely the main initial tools for quantitative vector analytics.
 
-Multi-result combined analysis also likely has conservative starting places, such as comparing two counts (which is bigger). This may be comparing two points (or ranges) in time for a general time-trend, or two different items (more cats than dogs vs. more dogs than cat).
+Multi-result combined analysis also likely has conservative starting places, such as comparing two counts (which is bigger). This may be comparing two points (or ranges) in time for a general time-trend, or two different items (more cats than dogs vs. more dogs than cat). 
 
-Fancier and more theoretical multi-vector searches have a less simple problem space: how many searches would be needed to generate data-points vs. how resource-costly would it be to do N searches, vs. how reliable are those searches?
+Fancier and more theoretical multi-vector searches have a less simple problem space: how many searches would be needed to generate data-points vs. how resource-costly would it be to do N searches, vs. how reliable are those searches? 
 
 Yet other forms of vector analytics such as dynamic-manifold modeling are probably very immature sciences as of 2026. But while outside of the MVP1 or MVP2 for detailed plans here, those are the future frontiers to pioneer. (And this may merge back into 'generative' modeling, which is generally considered separate for now and not the focus of this set of tests (though running a parallel set of tests on a 'custom trained' generative model is of course a required next-step overall). The future of generative and vector-analytics is most likely not simply-separate-areas (as even crude 'RAG' may illustrate today).
 
@@ -87,17 +109,17 @@ A primary use of a vector-database is for single document or few document search
 
 Technologies of vector-search primarily allow for search, for example if you have unstructured text-blob documents that mention an id_number and an age, you can, with reasonable reliability find the document or documents that contain that information (though structuring the output of the search is another problem).
 
-Analytics, or meta-data-analytics about the 'corpus' or 'documents' (as Natural Language Processing and Data Science discipline-fields often refer to the overall dataset and the non-tabular pieces of that dataset) tends to be a weakness of vector-search systems. For example, a vector-database of a book (or library of books) can be exceptionally good at answering individual-fact search questions such as: What did character X say about character Y's pet?
+Analytics, or meta-data-analytics about the 'corpus' or 'documents' (as Natural Language Processing and Data Science discipline-fields often refer to the overall dataset and the non-tabular pieces of that dataset) tends to be a weakness of vector-search systems. For example, a vector-database of a book (or library of books) can be exceptionally good at answering individual-fact search questions such as: What did character X say about character Y's pet? 
 (For example: What did Ron say to Harry and Hermiony about Hagrid's pet dragon after it bit Ron? (Note: There is also an unknown factor in terms of domain-specific training being training into the vector-model (which is very broadly the same as more famous 'generative' models, made popularly-known by Chat-bot-LLM web platforms).) Asking this question of a structured-tabular database of rows and columns (or graph-type, etc.) with a structured query (unless deliberately created just for this question) would be somewhere between challenging and utterly impossible to even define. But analytical or meta-data questions about the corpus cannot be done using a single-search mechanism. To a human user, there is often a blurry spectrum ranging from 'narrow single fact search' questions (like above) to about-the-corpus questions such as: How many times is X mentioned? or How many chapters are there? or How does X event compare with a distant Y event? Or What is the oldest document-record? Some of these are multi-point comparison conceptual questions, some of these are tabular-data analytical questions.
 
-Just because vector-analytics is rarely done does not mean that it cannot be. But what kinds of vector-analytics are low-hanging-fruit, which are more difficult, which are likely infeasible, and what might need to be known before-hand to make a set of vector-analysis tools that will fit enough of the expected questions in a domain?
+Just because vector-analytics is rarely done does not mean that it cannot be. But what kinds of vector-analytics are low-hanging-fruit, which are more difficult, which are likely infeasible, and what might need to be known before-hand to make a set of vector-analysis tools that will fit enough of the expected questions in a domain? 
 
 
-## 'The Quorum Rule'
-The Problem of Undefined Questions/Tasks: If you gave X task to 10 competent people, could you reasonably-often get one correct solution?
+## 'The Quorum Rule' 
+The Problem of Undefined Questions/Tasks: If you gave X task to 10 competent people, could you reasonably-often get one correct solution? 
 
 One of the issues here, that you may have seen coming in the above spectrum of query-types, is overly broad or vague questions. Some questions can helpfully if vaguely be answered such as: Who is Ron? (Answer: Ron is Harry's school-friend.), where the answer does not need to be exactly the same or uniform in order to be useful. Other questions, such as "What does Harry do?", or "What are books about?", or "What happens in history?", or "What results from physics?", or "What is?", are undefined or under-defined, where there is no practical or technical 'task' that is a satisfactory solution.
-Another way to look at this task-definition problem may be more simply rooted in the history of AI-Data-Science, and may provide us with a helpful rule of thumb benchmark. The original 1956 definition of "AI" was that if you have a defined task that a human-person can do, can a STEM-Tech way to do that task without a person? Let's use this 'Must be able to be done by a person' clause and make a test-rule: If you gave X task to 10 competent people, could you reasonably often get one correct solution? E.g. 10 people can identify a cat photo. 10 people can identify a yellow cat. 10 people can count how many yellow cats there are. 10 people can read a sum-total from a clear PDF. 10 people could compare N clear PDF sum-totals. But 10 people cannot turn a vague PDF (say, post-modern poetry) into a single structured table, or identify exact objects in a blurry mess of pixels that show nothing in particular (or any Rorschach test type question). As an important project planning note, it is often very difficult for people to perceive whether the tasks they are considering and proposing are clearly defined or not (e.g. unexpected variability in poorly-formed Winograd schema questions, see: https://medium.com/@GeoffreyGordonAshbrook/lets-test-models-and-let-s-do-tasks-84777f80eb99).
+Another way to look at this task-definition problem may be more simply rooted in the history of AI-Data-Science, and may provide us with a helpful rule of thumb benchmark. The original 1956 definition of "AI" was that if you have a defined task that a human-person can do, can a STEM-Tech way to do that task without a person? Let's use this 'Must be able to be done by a person' clause and make a test-rule: If you gave X task to 10 competent people, could you reasonably often get one correct solution? E.g. 10 people can identify a cat photo. 10 people can identify a yellow cat. 10 people can count how many yellow cats there are. 10 people can read a sum-total from a clear PDF. 10 people could compare N clear PDF sum-totals. But 10 people cannot turn a vague PDF (say, post-modern poetry) into a single structured table, or identify exact objects in a blurry mess of pixels that show nothing in particular (or any Rorschach test type question). As an important project planning note, it is often very difficult for people to perceive whether the tasks they are considering and proposing are clearly defined or not (e.g. unexpected variability in poorly-formed Winograd schema questions, see: https://medium.com/@GeoffreyGordonAshbrook/lets-test-models-and-let-s-do-tasks-84777f80eb99). 
 
 Asking if a vector database can answer an answer-able question (e.g. using 'the quorum rule') may be a helpful marker to refer to for end-users. And if end-users are not able to tell if their questions pass the quorum test or not, then they will be mixing apples and oranges in their plans and not be able to pick the right tool for a given task.
 
@@ -110,7 +132,7 @@ See: https://github.com/lineality/definition_behavior_studies et al
 
 ### Cross-Document Analytics (vs. Document-Search):
 
-The topic here is looking at at least some cross-document analytics may be
+The topic here is looking at at least some cross-document analytics may be 
 approached using a vector-database.
 
 Question about uses of vector databases to compare (across) documents.
@@ -124,7 +146,7 @@ We will construct a dataset that inherently contains high-quality structured-tab
 
 To create an empirical sandbox to pose and test clear use-cases, we can use a standard generic non-proprietary dummy-data context of "cats on the internet" (or pets more broadly). More specifically, we can leverage an existing system designed to create, test, and validate tabular-data-analysis. The tabular form of the data and the validated structured-analysis-results will form a foundation on which to build (a ground truth against which to compare) analysis of unstructured data (an unstructured, or de-structured, format of the same values in the structured data). This can be used to generate N-rows data systematically.
 
-https://github.com/stemnetbenchmarks/synthetic_biology_datasets_python
+https://github.com/stemnetbenchmarks/synthetic_biology_datasets_python  
 
 The existing synthetic data generator (synthetic_biology_datasets_python) has been supplemented with a description-blurb generator (csv_summary_blurb_augmentor.py) that deterministically converts known high quality (deterministically generated) tabular data into randomly varying formats of unstructured text-blobs (starting with 3 formats for mvp). While we may not expect (unstructured)vector-analytics to be able to perform every task that (structured)tabular-analytics can, this unified data-generation, testing, and validation framework allows unstructured ~queries to be tested with the same rigor as, and along side, corresponding structured ~queries. (Where 'query' here refers to whatever analysis being applied.)
 
@@ -141,9 +163,9 @@ This is a {animal_type}! It is {height_cm} cm tall. It gets {daily_food_grams} g
 
 ## Planning Vector-Analytics Queries
 
-The primary performance goal is approximately accurate results, as in trend/pattern analysis. There probably will be unavoidable noise, collisions, and granularity issues in any vector-database system to some degree.
+The primary performance goal is approximately accurate results, as in trend/pattern analysis. There probably will be unavoidable noise, collisions, and granularity issues in any vector-database system to some degree. 
 
-The primary research task is to articulate and test as many 'types' of vector searches, possibly in a phylogeny of types: a phylogeny of analytic questions mapped over spaces of feasibility, and generalization (implementation flexibility, and range of query flexibility).
+The primary research task is to articulate and test as many 'types' of vector searches, possibly in a phylogeny of types: a phylogeny of analytic questions mapped over spaces of feasibility, and generalization (implementation flexibility, and range of query flexibility).  
 A principle division in types is how 'generalizable' a search is.
 
 One of the great strengths of the generative 'chat-gpt' style system is that it has a minimal interface: anything noisy in, something noisy out; no configuration needed for a specific question.
@@ -151,7 +173,7 @@ One of the great strengths of the generative 'chat-gpt' style system is that it 
 
 For a search-retrieval vector query, likewise, it is general. One basic configuration can be used for most basic vector-searches (this is probably rarely tweaked ala-carte per query in most deployed systems).
 
-But of the range of possible structured-data-analytics questions, while some sets of these may be sufficiently emulated with vector analytics, how many different query-mechanics are needed?
+But of the range of possible structured-data-analytics questions, while some sets of these may be sufficiently emulated with vector analytics, how many different query-mechanics are needed? 
 
 single reference counting and two-reference-count-comparisons (e.g. which is bigger) can probably each be used (if with varied quality results) for those classes of questions.
 
@@ -164,7 +186,7 @@ D. a structured version of that chunk
 
 ## Framing analytics questions:
 
-Single:
+Single: 
 - How many documents mention cats?
 - How many documents mention flying cats?
 
@@ -188,7 +210,7 @@ Note: These questions and answers are in human-form, not in equation form. This 
 
 ## Basic Structured-Data Categories
 
-An important theme here, which may circle back to the theme of known-common-repeating questions vs. newer and often fuzzier questions, many questions that sound 'singular' can be answered in many different valid ways. This is one of the potential strength areas of generative and vector models, where contextual meaning and unwieldy variations can be navigated (if not wonderfully or uniformly) both with input and output.
+An important theme here, which may circle back to the theme of known-common-repeating questions vs. newer and often fuzzier questions, many questions that sound 'singular' can be answered in many different valid ways. This is one of the potential strength areas of generative and vector models, where contextual meaning and unwieldy variations can be navigated (if not wonderfully or uniformly) both with input and output. 
 
 ### Basic Statistics, EDA, & Descriptive-Statistics Questions
 1. "What is the most common animal type?"
@@ -293,6 +315,29 @@ ANSWER: "[blank animal] has the most negative sentiment in their social media po
 ANSWER: "Fish typically discuss [blank, blank, blank] in their social media."
 
 
+## Specific Evaluation Tests & 'Types' of Datasets
+
+It is important to understand some basic types of testing/training/validating data when you are putting together your project, tests, data, and datasets. (Remember, standard wisdom has long held that this is the first 90% of work in most projects (though that endlessly surprises people).) 
+
+A classification type test against all rows (common in traditional statistics where there is an emphasis on dataset properties such as "balanced" or "imbalanced" datasets) is not the same as a 'unique recommendation' or 'unique data row' type test that is based on "ranked" uniqueness. A rank-based (unique row finding) test will not work to evaluate a large class-label dataset (of non-unique rows) for example 10 million rows of labeled hot-dog or not-hot-dog data. 
+
+'Rank' Type datasets and tests are for where the context is highly unique rows, often unique 'unstructured' data such as book-text or images (e.g. finding the one matching page in a children's picture book, or in a large PDF). Having half the dataset being a correct match will output worse than meaningless results: for traditional statistics on field values the larger the dataset the better, but if you put N-million rows of hot-dog labels into a rank test, the bigger (traditionally 'better') your balanced dataset is the more distorted the results will be. 
+
+Examples: 
+
+1. Class-Label Type: Per Row Confusion Matrix Data (TP,TN,FP,FN (Type-1 and Type-2 errors) & Confusion Matrix Derivative-Metrics (Precision, Recall, F1 (balanced between precision and recall), there are more than 50 derived metrics for various specific uses.)
+
+2. Rank Type: Recall@K, e.g. Single unique item in Top-10 (not a class/classification label) 
+
+3. Rank Type: Rank Analysis: MRR (Mean reciprocal rank), Mean Rank, Median Rank
+
+
+As another item that is a repeated snag for projects: model performance is dataset specific. You cannot train or test a system on one 'dummy (not real-world) dataset' and in any way reliably expect that system to perform just as well on new and different real-world data-sets. 
+
+Also, note that a 'pre-trained' model (it's in the name) is not able to be updated and trained over time as other forms of learning-models are updated and trained on new and current data (in a previous age 'benchmarking' usually meant evaluating ongoing training & performance of a (not one time pre-trained) model in production-deployment (being used by real world users)). 
+
+Highly unique fuzzy requests for highly unique fuzzy unstructured data are peripherally mentioned here, but the main focus is on leveraging what is well defined. Even where a given semi-unique combination of structured fields is in scope, it is not clear that this justifies using a 'must be unique or the results are meaningless' rank-test.
+
 
 ## Other Research Questions (For Structured/Unstructured Queries):
 
@@ -306,7 +351,7 @@ E.g. What sets of questions could not be answered by a preliminary document-stru
 - What are questions we can ask (with a given interface)?
 - How can we make an interface of tools manageable?
 
-A more specific example of the features and trade-offs of a data-structuring or data-extraction system can be shown by the structured-query validation notebook itself.
+A more specific example of the features and trade-offs of a data-structuring or data-extraction system can be shown by the structured-query validation notebook itself. 
 
 1. Completely Fixed: ~Dashboard
 To the degree that the exact questions are known, a fixed 'dashboard' UI (not a notebook) could be created (such as using Plotly), or generated as a static or interactive .html doc, such that the report can be refreshed or re-generated at any time in a few seconds.
@@ -334,32 +379,32 @@ While this paper to some degree focuses on predictive-analysis and causal-factor
 4. The focus here is unstructured text and image data that could be tabular, but another large case is domains such as financial or medical tabular data to which people may want to apply vector-based tools. Are those cases separate, or somewhat spoken to in the above question types? E.g. For a given set of numerical small-business financial data, there may be a nearly infinite number of different structured analytics queries and transformations that could be done across myriad contexts to ask and answer many questions.
 
 
-5. Another level of implementation question might be the feasibility of a fixed-static and tested system reliable within known tolerance for known questions, vs. an intermediary 'function-call' system that translates a human query into a coding-problem solved by generative-AI, that could potentially answer a wider range of analytic questions with a simple user interface with the likely catastrophic caveat and cost of a complete loss of reliability, with an unknown and ever fluctuating portion of answers collapsed into either incoherent slop or invisible-slop that is utter nonsense but is perceived as hard calculation. For a given use-case, 'total-mess 50% of the time' could be entirely reasonable (e.g. for a semi-smart vacuum cleaner), but in other cases this should be very soberly kept at a safe distance from consideration.
+5. Another level of implementation question might be the feasibility of a fixed-static and tested system reliable within known tolerance for known questions, vs. an intermediary 'function-call' system that translates a human query into a coding-problem solved by generative-AI, that could potentially answer a wider range of analytic questions with a simple user interface with the likely catastrophic caveat and cost of a complete loss of reliability, with an unknown and ever fluctuating portion of answers collapsed into either incoherent slop or invisible-slop that is utter nonsense but is perceived as hard calculation. For a given use-case, 'total-mess 50% of the time' could be entirely reasonable (e.g. for a semi-smart vacuum cleaner), but in other cases this should be very soberly kept at a safe distance from consideration. 
 
 6. Dynamic Vector Processes and The Manifold Hypothesis
-While raw-vector models and generative models may be identical except for the 'head' of the output, it is likely that in that the early 2020s we did not understand more deeply how the two work and differ.
+While raw-vector models and generative models may be identical except for the 'head' of the output, it is likely that in the early 2020s we did not understand more deeply how the two work and differ. 
 
 It may be that in a generative model operates through a soft-of-recursive-ish process of starting with the same initial vector, then adding a granularity token using that input token set as context, and repeating N times, tracing out a narrow contextual 'manifold' within the meaning-concept-vector-space defined, prescribed, or proscribed, but the original input (and directed by how well (or poorly) the model has learned to trace an meaningful "manifold").
 
-In the early 2020s people were, so far as I know (there is more research than is possible to find), exclusively interested in looking at the high level converted token output, not in, for example, having meta-data about the manifold-pattern be itself 'output' of the 'query' to the model.
+In the early 2020s people were, so far as I know (there is more research than is possible to find), exclusively interested in looking at the high level converted token output, not in, for example, having meta-data about the manifold-pattern be itself 'output' of the 'query' to the model. 
 
-While generative manifold-tracing is one way to explore and use the N-dimensional-hypervolume (which is also a definition of an 'ecology' in biology, as a side note) this same space, and these same type of manifold patterns, can be explored either manually or with more manual or comparative intervention.
+While generative manifold-tracing is one way to explore and use the N-dimensional-hypervolume (which is also a definition of an 'ecology' in biology, as a side note) this same space, and these same type of manifold patterns, can be explored either manually or with more manual or comparative intervention. 
 
 Both for analysis and 'generation,' the scope of early 2020s work is probably not using many tools and approaches that can be brought to questions.
 
 A persistent theme is mapping concept-data to detailed structured data, and mapping concept-"analysis" to ~deterministic (or 'same input, same output') structured-data analysis.
 
 It may be helpful to use the Kahneman and Tversky terms for "System 1" for meaning-concept fuzzy processing (fast for biological-humans, slow for computer-machines) and "System 2" for deliberative algorithmic well defined analysis (that is slow for biological-humans but fast for computer-machines).
-https://en.wikipedia.org/wiki/Daniel_Kahneman
-https://www.amazon.com/Thinking-Fast-Slow-Daniel-Kahneman/dp/0374533555
+https://en.wikipedia.org/wiki/Daniel_Kahneman 
+https://www.amazon.com/Thinking-Fast-Slow-Daniel-Kahneman/dp/0374533555 
 
 This topic may both touch on the limitations of single-vector content capacity, and on the topic of ~searching manifolds rather than single vectors: dynamic vector analytics vs. static.
 
 
 7. Raw Data Depth
-One of the recurring questions here is where and how and whether what is here being approached as a vector-query question should entirely be a (likely generative or in some narrow cases GOFAI-rules) document extraction structuring step: instead of trying to ("System 2") analyze data from a vector, extract the data from the document and ("System 2") analyze those data the normal way. In such as case there is no need to make a vector database at all (if that is the entire scope).
+One of the recurring questions here is where and how and whether what is here being approached as a vector-query question should entirely be a (likely generative or in some narrow cases GOFAI-rules) document extraction structuring step: instead of trying to ("System 2") analyze data from a vector, extract the data from the document and ("System 2") analyze those data the normal way. In such as case there is no need to make a vector database at all (if that is the entire scope). 
 But...
-There may be (or not) cases where there is additional relevant 'information' in the raw original unstructured data than only the assumed scope of defined fields. If you really only want to know about (sticking with out demo-context) pet color and pet activities for one fixed data-table, then possibly the vector-step is not useful. But if there are an open-ended number of questions for an open-ended set of inputs, including photos, and you do find yourself having new future questions such as 'family-ness' questions or even 'location-ness' questions, those can all be explored with the vector-database approach.
+There may be (or not) cases where there is additional relevant 'information' in the raw original unstructured data than only the assumed scope of defined fields. If you really only want to know about (sticking with out demo-context) pet color and pet activities for one fixed data-table, then possibly the vector-step is not useful. But if there are an open-ended number of questions for an open-ended set of inputs, including photos, and you do find yourself having new future questions such as 'family-ness' questions or even 'location-ness' questions, those can all be explored with the vector-database approach. 
 (Note: This may also connect back to the other persistent theme which is vector-database search vs. trained model. As in the case of Zephyre, a spin-off from Mistral 7b, Zephyre was trained for about $500 (USD) in a few hours on a small-set of partially synthetic data (if I recall correctly), and that was in 2023. It is possible that a topic-specific-expert 3b or 2b or 200m model can be trained with less cost and have more cross-contextual utility than a vector database - though, again, the vector database let's you see the original documents (and yet yet again again, a properly trained model may (may) be able to reliably-enough tell you that same document source information...)
 
 8. Result Comparison vs. Result Chaining
@@ -369,32 +414,32 @@ Is there a difference between comparing vector results and 'chaining' vector sea
 9. Query-Chaining and Granularity
 It may be useful to have a systematic way to chain vector queries to narrow down results.
 
-Both vector models and generative models (again, the difference potentially being only in the modular 'head' and not in the vector-space itself) have a range of good-ability and limit of 'bandwidth' for combining multiple tasks at once.
+Both vector models and generative models (again, the difference potentially being only in the modular 'head' and not in the vector-space itself) have a range of good-ability and limit of 'bandwidth' for combining multiple tasks at once. 
 
-E.g.
+E.g. 
 Let's say you want to make a query that has N parts: cats, dogs, kids, families, red, blue, swimming, beach-balls, sun, trees, birthday-ranges, specified activities, etc. etc.
 
-Each of these can be a clear query with a well focused result. But as N grows, the focus of the model gets diluted.
+Each of these can be a clear query with a well focused result. But as N grows, the focus of the model gets diluted. 
 
 10. Stress Tests
-While likely outside the range and scope of a specific narrow tool, there are various edge-case behaviors that point to unknowns in the boundaries and workings of deep-learning systems.
+While likely outside the range and scope of a specific narrow tool, there are various edge-case behaviors that point to unknowns in the boundaries and workings of deep-learning systems. 
 
 11. The importance of guard-rails, case by case
 Generative-guestimation technology is groundbreaking in being able to generate mostly-on-topic-ish content. For some vague-scale tasks this is sufficient, but for highly-detailed tasks this is somewhere between insufficient and obviously completely the wrong category of tool.
 
-https://www.bbc.co.uk/mediacentre/2025/new-ebu-research-ai-assistants-news-content
+https://www.bbc.co.uk/mediacentre/2025/new-ebu-research-ai-assistants-news-content 
 
 12. Continual Study & Oversight
 
 13. Search-Retrieveal without 'generation,' a document-retrieval system.
 
 
-14.
+14. 
 - search and sort
 - extract specific image data
 - summarize
 - compare/chain queries
--
+- 
 
 
 15. Mapping out cases and example of queries:
@@ -431,14 +476,14 @@ But then, thinking about an empirical/physical book, the person might say: Great
 
 To a book-group sitting in a circle holding physical books and counting manually, this question will not appear to be (or be) very different. But a vector model sees 'chunks' and it is non-trivial how either a vector model or a tabular structuring process would be able to view an .epub book or a flat .txt file in such a standardized hierarchy.
 
-If two books are chunked in the same way, a relative comparison of
+If two books are chunked in the same way, a relative comparison of 
 
 
-Even books vs. animals. It would be most likely effective to use vector-comparison analytics to say if 'cat-ness' or 'dog-ness' were more prevalent. But even the question of picking out two specific books may or may not be something that a vector-chunk has any information on, and may or may not be handled by in-chunk meta-data (added to each chunk) or a previous step BEFORE vector search that did a structured-search for only chunks relating to that source-book (so, not a vector-search).
+Even books vs. animals. It would be most likely effective to use vector-comparison analytics to say if 'cat-ness' or 'dog-ness' were more prevalent. But even the question of picking out two specific books may or may not be something that a vector-chunk has any information on, and may or may not be handled by in-chunk meta-data (added to each chunk) or a previous step BEFORE vector search that did a structured-search for only chunks relating to that source-book (so, not a vector-search). 
 
 
 2. 'cat' vs. 'cat-ness'
-In NLP, some things can be handled as single strings, but once something cannot it rapidly escalates into an unsolve-able problem. This is in part how and where concept-vector models including generative models have made significant advances, moving from an unsolved problem to a messy-partial solution (that people sadly rush to assume is a complete unified single naive STEM solution).
+In NLP, some things can be handled as single strings, but once something cannot it rapidly escalates into an unsolve-able problem. This is in part how and where concept-vector models including generative models have made significant advances, moving from an unsolved problem to a messy-partial solution (that people sadly rush to assume is a complete unified single naive STEM solution). 
 
 
 
@@ -447,25 +492,25 @@ In some specific cases, time series trend information may be derived from vector
 
 
 19. The context-window-problem:
-In case it is not clear yet: You cannot put gigabytes of tabular data into the search-context-history 'prompt' of a generative model.
+In case it is not clear yet: You cannot put gigabytes of tabular data into the search-context-history 'prompt' of a generative model. 
 
-It might sound like it makes sense to say: "Let's just ask AI instead of doing structured-queries of our tabular data!" but it is extremely unclear what the design, scope, goals, mechanics, tech-stack, etc. are for such a project.
+It might sound like it makes sense to say: "Let's just ask AI instead of doing structured-queries of our tabular data!" but it is extremely unclear what the design, scope, goals, mechanics, tech-stack, etc. are for such a project. 
 
 If someone said: "Instead of using fossil fuels to power our cars, let's use AI!" or "Instead of plants using sunlight or people eating animals, let's use AI!" Despite enthusiasm, some quasi-ideas do not make any sense.
 
 
 # 19 Transient and Persistent `Edge Cases` with deep learning and embedding-vector models:
-- "The Negation Problem in Embedding Models": where a concept in the model does not distinguish between positive and negative.
+- "The Negation Problem in Embedding Models": where a concept in the model does not distinguish between positive and negative. 
 
 # 20 Example: Metadata and Cross-Document State with Concept-Vectors
 
 As a hypothetical ~case-study in vector search granularity and statefulness, let's say our pet-data comes from reports from different organizations: ASPCA, EU, World-Bank, Pets-Org, etc. If each organization, each report, each section of each report, and each page of each report, each have a unique-ID that can be filtered on in a structured query, then it would be possible for that to be a context of a 'hybrid' vector search, where one or more such comparative hybrid searches were pre-set. The user enters their query, and the result is a comparison dashboard showing, e.g. per organization, per report, the chunk-distance, chunk-quantity, and chunk-clustering, for each (with a possible 'headline' section showing the top N organizations and top N reports.
 
-(and such could also be done for sections and pages for a single specified report)
+(and such could also be done for sections and pages for a single specified report) 
 
 But without this 'metadata' (or data in another table linked to the chunk somehow) about where the chunk came from, the vector-model itself only sees chunks made of tokens in 'concept-matrix-space,' the vector model itself cannot analytically count how many times the string 'cat' appears in a chunk. A sufficiently sophisticated model may be able to guesstimate such a quantity, but the primary domain of the vector is tokens in a chunk in a concept-space.
 
-Also note: For tabular data searching ten million records is simple, that is what tabular data is for. But doing and comparing ten million separate vector queries (or 10 septillion vector queries) might become too costly in money, time, server-traffic, energy, etc. And if the people doing the queries do not understand the problem-space and think all queries are equally cheap, that could be an expense issue.
+Also note: For tabular data searching ten million records is simple, that is what tabular data is for. But doing and comparing ten million separate vector queries (or 10 septillion vector queries) might become too costly in money, time, server-traffic, energy, etc. And if the people doing the queries do not understand the problem-space and think all queries are equally cheap, that could be an expense issue. 
 
 
 # 21. Primaries measures in vector analytics:
@@ -479,7 +524,7 @@ But what could varying patterns in clustering-behavior say that might be useful?
 
 
 ## 22. Tradeoffs in Vector Search
-There are also likely options and tradeoffs in terms of exhaustive vs. speed-optimized searches, in case there are clear 'fast and fuzzy is good' vs. 'slow and accurate is good' use-cases.
+There are also likely options and tradeoffs in terms of exhaustive vs. speed-optimized searches, in case there are clear 'fast and fuzzy is good' vs. 'slow and accurate is good' use-cases. 
 
 This may also be an area where low-code/no-code platforms create the standard (using the car acceleration analogy) 0-59 MPH very quickly, but being unable to ever reach the actual production needs, with time and costs ballooning exponentially after the initial cheap-rapid-acceleration.
 
@@ -498,12 +543,13 @@ On the fly vector analytics vs. a classic stored vector database:
 One of the drawbacks of using vector analytics for some projects is the technical, time, and financial overhead of maintaining a scary sounding 'vector database.' However, some of this concern is people getting tripped-up over their own flourishes and attempts to razzle-dazzle customers with amazing-sounding descriptions. While you can invest a lot of time and money in a 'super shiny' third-party-maintained deluxe "we can take care of that for you for a price but our API is tricky" low-code no-code service:
 rolling your own 'vector database' is trivial and can be done 'on the fly' in at least two ways.
 1. Not all vector queries require a permanent, maintained, always-on "database" that exists as cloud infrastructure. You can perform a vectorization of the records that you need in seconds or minutes, if the query does not need to be lighting fast.
-2. A 'database' of stored vectors does not need to be a fancy expensive infrastructure project. Again, if the system does not need to be a lightning fast cloud service 24-7, 365, globally online, you probably have better options custom made by you for your needs (ideally using something like Rust and not Python).
-## 26. Could vector-search and selective-document-structuring be combined?
+2. A 'database' of stored vectors does not need to be a fancy expensive infrastructure project. Again, if the system does not need to be a lightning fast cloud service 24-7, 365, globally online, you probably have better options custom made by you for your needs (ideally using something like Rust and not Python). 
+## 26. Could vector-search and selective-document-structuring be combined? 
 A key reason to not do document structuring is the time/resource cost for what might be a (multiple attempts at a) single query (not a recurring query). But could the number of documents being structured first be narrowed down by some combination of vector and tabular filters? This might further extend the precision obtained when using extraction of tabular data from an unstructured document.
 
+## 27. How long does it take to do structuring/extraction for a query, with a generic foundation model, with an optimal-small model, with a custom-made model? Can that time/cost be made small enough to be practial? (note: pre-filter to reduce the number of documents structured/extracted may further optimize this). 
 
-## Other Tests:
+### Other Tests:
 - Depending on the format of the output, a classification-head put on a fine-tuned foundation-model may be a long term strategy for a more stable and improve-able pathway for data-structuring, with the big assumption that the output is known and of a type that can be output by a known-class classification model. (e.g. binary classifications,vs. fixed mutually exclusive categories, vs. non-mutually exclusive classes)
 
 ### Design Question:
@@ -515,8 +561,10 @@ How can clustering-dispursion of results potentially be used?
 
 # 2. Phylogenies / Taxonomies of Analytics:
 
-Vector-Query-Data Analysis:
-Use the results of a vector-database queries as the data to analyze.
+The following are preliminary attempts at breaking down areas for use, testing, and comparison (e.g. comparing what approach works better at a given task (or can do/support a task at all), and or what limitations of an approach are).
+
+#### Vector-Query-Data Analysis:
+One of the primary ideas to test, is using the data from the results of a vector-database query as the hard-data with which to perform data-analytics on unstructured data (such as unstructured, test, images, audio, or multi-media/multi-modal 'documents' in a 'corpus').
 
 
 ## ~ Dependability/Consistency Tests
@@ -595,7 +643,7 @@ And 'Value Counts'
 
 To give the count or normalized-proportion of each unique field-value or 'class' (as in known-class classification).
 
-See:  https://pandas.pydata.org/docs/reference/api/pandas.Series.value_counts.html
+See:  https://pandas.pydata.org/docs/reference/api/pandas.Series.value_counts.html 
 
 
 
@@ -625,8 +673,8 @@ And two additional very frequently useful standards:
 - freq
 &
 
-3. Pre-filtered numeric descriptive statistics
-4. Pre-filtered categorical descriptive statistics
+3. Pre-filtered numeric descriptive statistics 
+4. Pre-filtered categorical descriptive statistics 
 
 
 5. Single-field categorical value-count per field-value/class.
@@ -635,10 +683,10 @@ And two additional very frequently useful standards:
 &
 
 7. Single-field categorical normalized "value-count" per field-value/class.
-8. Pre-filtered categorical normalized "value-count"
+8. Pre-filtered categorical normalized "value-count" 
 
 Another area which sometimes can be important is mapping out where (sometimes to exclude) empty values (which can also apply to unstructured text blobs)
-e.g. https://github.com/lineality/language_detect
+e.g. https://github.com/lineality/language_detect 
 
 
 
@@ -651,9 +699,9 @@ e.g. https://github.com/lineality/language_detect
 - under-defined
 - uninterpretable
 
-2. Narrow search category:
+2. Narrow search category: 
 - Find one item
-- is one item available or not
+- is one item available or not 
 - How many items are found?
 
 3. Comparing N searches:
@@ -670,7 +718,7 @@ Doing N narrow searches, then an additional step of comparing the ~meta-data of 
 - probably very challenging or not possible
 - likely better suited to a separate previous structuring step.
 - What is the mean/media/mode height... tricky.
-(vectors can't 'say' a number, but they may 'see' numbers.
+(vectors can't 'say' a number, but they may 'see' numbers. 
 E.g. "Median age is under 5" might actually be a legitimate vector question, e.g. comparing vector-result-profiles for "age is under 5" and "age is over ten" (not idea examples there)
 
 6. Information-flow and correlation questions:
@@ -678,10 +726,10 @@ E.g. "Median age is under 5" might actually be a legitimate vector question, e.g
 - e.g. "How does an animal's age affect its ability to run?"
 - e.g. "Is there a relationship between age and number of friends?"
 - In theory vector-analysis might actually be a shortcut to this analysis, where vector-distance between groups/culters can be a proxy for information-flow/correlation. E.g. If you can compare the optional animal vectors for the cluster of records that are 'run' or 'swim'.
-- Also: this type of question might be well suited to pretrained or fine-tuned domain data (or depending on how that is done).
+- Also: this type of question might be well suited to pretrained or fine-tuned domain data (or depending on how that is done). 
 
-7. Sorting Questions:
-(what is the oldest record), in cases where this is a 'vector-distance-sort' the difficulty is easiest, but if this is a sort that cannot be handled through vector-comparison, that may be tricky. It may be that some (more) sorting questions can be translated into vector-distance questions, though the model may need to be trained for that set of concepts. 'oldness' in theory should be able to be a vector, even if that means having a comparative set of timestamps in each chunk (that is entirely feasible, usually standard chunk metadata best practice).
+7. Sorting Questions: 
+(what is the oldest record), in cases where this is a 'vector-distance-sort' the difficulty is easiest, but if this is a sort that cannot be handled through vector-comparison, that may be tricky. It may be that some (more) sorting questions can be translated into vector-distance questions, though the model may need to be trained for that set of concepts. 'oldness' in theory should be able to be a vector, even if that means having a comparative set of timestamps in each chunk (that is entirely feasible, usually standard chunk metadata best practice). 
 
 8. Time Series Analysis:
 Probably tricky, but possibly an area for progress.
@@ -696,11 +744,20 @@ Probably tricky, but possibly an area for progress.
 A. What would happen if __?
 B. Red, Blur, Purple Team: What might someone do...and then what might someone else do?
 
+# Datasets & Functionalities
+
+As per the focus of this study/report, defining exactly what question/query/functionality is in scope for your project is crucial.
+
+While it is possible that a single dataset, using various fields in the same rows, may be both usable and desirable for (testing, and potentially 'training' for) multiple "features," it should be remembered that, potentially, each unique feature may require both a separate dataset and testing apparatus fit for that specific "feature." "Feature" or "functionality" are common, more general, terms for what exactly the project is doing. In this case the feature or functionality will often be a query, but processes such as structuring/extracting data fields should also be (features/functionalities that are) tested/evaluated. (Sadly the term 'feature,' which is often used to refer to user-level user-features (thing that the user can do) can confusingly collide with the same term 'feature' that refers to fields or columns in a dataset (such as in 'feature engineering').
+
+There may also be other factors such as, what specific edge cases do you want to test for? 
+
+Without having robust answers to these questions, you cannot reliably slop together a general data pile that will be an asset. There is a reason why the rule of thumb that for any DS AI ML project continues to be true decade after decade: the first 90% of time and energy goes into dataset management before you can even start anything else.
 
 
 # MVPs & MVP-1
 
-Before running the tests, existing python code is used to generate data needed (at the user specified quantity) and the specified unstructured blurbs.
+Before running the tests, existing python code is used to generate data needed (at the user specified quantity) and the specified unstructured blurbs. 
 
 Tests are carried out using the .csv data that includes the unstructured_description field. Some tests only use the tabular data, some tests only use the vectorized unstructured blurb, some tests use both (hybrid).
 
@@ -731,9 +788,9 @@ ChromaDB is largely a black box; it can provide top-N results but no analytics o
 
 ChromaDB may internally use approximate nearest neighbor search (ANN), not K-nn, with fuzzy optimizations for speed such as HNSW. In some real-world use-cases the performance may be adequate, but for testing and analytics purposes we would risk introducing abstractions, unknowns, and black box results into our framework of comparisons.
 
-For example, there may be no way to tell if chunks are being missed due to the model, or due to the black-box-optimizations of a given low-code-no-code abstraction-layer, so trying to evaluate and compare model performance and metric performance (et al) would be under a cloud of obscurity: possibly good enough, possibly not, and no transparency into the details or meaning of the numbers used.
+For example, there may be no way to tell if chunks are being missed due to the model, or due to the black-box-optimizations of a given low-code-no-code abstraction-layer, so trying to evaluate and compare model performance and metric performance (et al) would be under a cloud of obscurity: possibly good enough, possibly not, and no transparency into the details or meaning of the numbers used. 
 
-Third party dependencies should be something planned for.
+Third party dependencies should be something planned for. 
 
 
 #### Results: Count & Confusion Matrix
@@ -756,7 +813,7 @@ Files saved in (path) {cwd}/tests/tests_{timestamp}/
 
 Glossary note: 'tabular' refers to a row and columns table with known datatypes and one field per column.
 
-As an example of an empirical exploration of tradeoffs, we can look at vector-data, structured-tabular-data, structured-extracted data, and hybrid vector/structured-tabular-data by experimenting with the efficiency/correctness using fields including known time-fields in unstructured data (with a parallel structured dataset).
+As an example of an empirical exploration of tradeoffs, we can look at vector-data, structured-tabular-data, structured-extracted data, and hybrid vector/structured-tabular-data by experimenting with the efficiency/correctness using fields including known time-fields in unstructured data (with a parallel structured dataset). 
 
 e.g.
 How many cats were born after T posix-time?
@@ -777,7 +834,7 @@ time + cat + 14 other fields
 
 ### Query Tests:
 (in this case, how many cats and how many cat-docs are the same)
-This might be interpreted as 'search docs about cats', abbreviated.
+This might be interpreted as 'search docs about cats', abbreviated. 
 A. How many cats? (one field raw doc-count)
 B. How many cats + 1 filter (e.g. cats who can fly)
 C. How many cats born after T (time series doc-count)
@@ -789,7 +846,7 @@ E. How many cats born after T who... (Stress test: (Time + 5 fields) )
 4. can_run == majority_class_cat_run class,
 5. animal_type == cats (fixed),
 
-The system will use: cat specific median weight, height, food-grams and the majority class for can_run.
+The system will use: cat specific median weight, height, food-grams and the majority class for can_run. 
 
 The process is fixed to avoid repeatability audit issues and for extra clarity, the printed report will show the computed cat specific thresholds so results are auditable.
 
@@ -833,7 +890,7 @@ this only uses the structured tabular fields.
 A. to E.
 
 2. Vector-Query Only
-v1:
+v1: 
 - "This is about a cat." as the vector search input
 - "This is about a cat born after T year" (perhaps)
 - "This is about a cat, a feline, born after T year and that can fly: a flying cat."
@@ -852,7 +909,7 @@ In early tests, "cat, feline" was ~0.47 but below the 0.5 match threshold (faili
 Note: This likely depends on the embedding model, as the classic example of "king, queen" "man, woman" vector distance (admittedly a very, very different embedding-vector-model) did deal with single words.
 
 As in tests that can scale:
-https://medium.com/@GeoffreyGordonAshbrook/modularizing-problem-space-for-ai-following-a-wedge-by-sight-ab88796c4b57
+https://medium.com/@GeoffreyGordonAshbrook/modularizing-problem-space-for-ai-following-a-wedge-by-sight-ab88796c4b57 
 
 Note: more scale can be tested as well (but you will need enough fields and data and the more you filter down the smaller that final selection is, e.g. if you want 50 fields, you will likely need to engineer the fields to allow enough rows to match positively through all those filter layers).
 + 1, +5, +15, +25, +50 etc.
@@ -874,10 +931,10 @@ B. Comparative Multi-Query Tests
 2. Where is the 'scope depth limit' (Kasparov Event Horizon) for a given model
 
 3. As quantitatively as possible, what are the tradeoffs of our four bins:
-#### A. Tabular-Structured Queries/Analytics,
-#### B. Vector Queries/Analytics,
-#### C. Structuring/Extraction Queries/Analytics,
-#### D. Hybrid Queries/Analytics,
+#### A. Tabular-Structured Queries/Analytics, 
+#### B. Vector Queries/Analytics, 
+#### C. Structuring/Extraction Queries/Analytics, 
+#### D. Hybrid Queries/Analytics, 
 
 4. Test the reliability of structuring/extracting data.
 Structuring Unstructured Data Note:
@@ -888,7 +945,7 @@ What cost/performance for what tools?
 
 Note: a tabular search does not care how many modules are added to a search, for the most part.
 
-5. Specific Vector tests, such as negative descriptions and 'The Negation Problem in Embedding Models', which may eventually involve comparing different models, different distance metrics, and fine-tuned versions of models.
+5. Specific Vector tests, such as negative descriptions and 'The Negation Problem in Embedding Models', which may eventually involve comparing different models, different distance metrics, and fine-tuned versions of models. 
 
 6. How reliable can document structuring be, for what cost?
 
@@ -909,18 +966,18 @@ Mode 2: (possibly a completely separate python to keep code clean)
 Mode 2 is batch-extraction mode. user specifies size and quantity of batches.
 e.g. for batch_size=10, batch_quantity=2
 this is like N=2 above, except that instead of one row, it is one batch of rows.
-the first 10 rows will all be put into one long text blob and checked, then the next 10 rows
-will be put into the next extraction.
+the first 10 rows will all be put into one long text blob and checked, then the next 10 rows 
+will be put into the next extraction. 
 
 1. iterate B(int) batches of R(int) rows through table
 2. make blurb-batches
 3. extract batch of dicts from from blurbs
 4. compare to table
-5. score: confusion matrix, which fields are what % of errors
+5. score: confusion matrix, which fields are what % of errors 
 
 For batch mode, the validation will be slightly different, as it will primarily check to see if any of the N rows match.
 If a match fails, we should also check to see which row might match most closely. If there is a best-fit row,
-(e.g. only one row that is off by 1 or 2 fields) then we can estimate what the problem was (which fields caused it to fail).
+(e.g. only one row that is off by 1 or 2 fields) then we can estimate what the problem was (which fields caused it to fail). 
 
 
 ## Analysis & Results
@@ -976,7 +1033,7 @@ If a match fails, we should also check to see which row might match most closely
 16. wasserstein_distance
 
 See python functions for most (not mahalanobis) here:
-https://github.com/lineality/arxiv_explorer_tools
+https://github.com/lineality/arxiv_explorer_tools 
 
 Note: If a vector database has been designed and trained based on a given distance calculation type, performance and results may be degraded if you do not use that calculation (or cannot find out what that calculation is).
 
@@ -1042,7 +1099,7 @@ documents = [
     # etc.
 ]
 
-# Generate embeddings
+# Generate embeddings 
 embeddings = model.encode(documents)  # returns numpy array, shape (n_docs, 384)
 
 # Query:
@@ -1084,7 +1141,7 @@ print(f"""
 
 count_above_threshold -> {count_above_threshold}
 distance_distribution -> {distance_distribution}
-
+      
 mean_distance -> {mean_distance}
 std_distance -> {std_distance}
 
@@ -1107,7 +1164,7 @@ dogs_above_05 -> {dogs_above_05}
 This project uses Mistral and Anthropic models, but for api-model testing and for generating and checking mvp prototype code.
 This report was not, nor any section of it, generated by model.
 
-https://www.bbc.co.uk/mediacentre/2025/new-ebu-research-ai-assistants-news-content
+https://www.bbc.co.uk/mediacentre/2025/new-ebu-research-ai-assistants-news-content 
 
 https://medium.com/@GeoffreyGordonAshbrook/lets-test-models-and-let-s-do-tasks-84777f80eb99
 
@@ -1115,13 +1172,15 @@ https://en.wikipedia.org/wiki/Rorschach_test
 
 https://en.wikipedia.org/wiki/Terry_Winograd
 
-https://en.wikipedia.org/wiki/Winograd_schema_challenge
+https://en.wikipedia.org/wiki/Winograd_schema_challenge 
 
-https://www.economist.com/science-and-technology/2026/02/18/the-human-exposome-project-will-map-how-environmental-factors-shape-health
+https://www.economist.com/science-and-technology/2026/02/18/the-human-exposome-project-will-map-how-environmental-factors-shape-health 
 
-https://en.wikipedia.org/wiki/Daniel_Kahneman
-https://www.amazon.com/Thinking-Fast-Slow-Daniel-Kahneman/dp/0374533555
+https://en.wikipedia.org/wiki/Daniel_Kahneman 
+https://www.amazon.com/Thinking-Fast-Slow-Daniel-Kahneman/dp/0374533555 
 
-https://medium.com/@GeoffreyGordonAshbrook/modularizing-problem-space-for-ai-following-a-wedge-by-sight-ab88796c4b57
+https://medium.com/@GeoffreyGordonAshbrook/modularizing-problem-space-for-ai-following-a-wedge-by-sight-ab88796c4b57 
 
-https://github.com/lineality/definition_behavior_studies
+https://github.com/lineality/definition_behavior_studies 
+
+
