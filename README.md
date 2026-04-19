@@ -482,4 +482,5 @@ Note: use assorted phrases that different types of analysis might pick up: film,
 - linear vs. nonlinear patterns
 - 'causal inference' type questions and data
 
+### Also see markdown on Evaluating Vector & Hybrid Data Analytics, Mapping Unstructured-Analytics Problem-Spaces: Comparing Methods, Performance and Tradeoffs Using Vector, Generative, & Assorted Tools to Perform Analytics on Structured & Unstructured Data
 
