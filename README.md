@@ -1,5 +1,5 @@
 #### sythetic_biology_datasets_python
-# data generation tools
+# Data Generation & Testing Tools for Evaluating Structured-Data-Analytics Performance
 ## Make and use: synthetic_biology_dataset.csv
 ##### GGAshbrook 2025.04
 
@@ -41,7 +41,7 @@ A. generate a dataset that is testable, verifiable, and verified, and that is no
 
 B. generate and verify answers to pre-set questions, based on the verified data
 
-C. Evaluate and compare the performance of models in a standardized and well-defined way, comparing apples to apples.  
+C. Evaluate and compare the performance of models in a standardized and well-defined way, comparing apples to apples.
 
 Here the dataset will be specifically designed for the specific questions to be asked about it (see details below).
 
@@ -49,7 +49,7 @@ Here the dataset will be specifically designed for the specific questions to be 
 ### Example Types of Questions (Summary):
 1. What ~simple tabular-operations can the AI reliably do when specifically named?
 
-2. What ~simple tabular-operations can the AI correctly interpret from a non-technical question?  
+2. What ~simple tabular-operations can the AI correctly interpret from a non-technical question?
 
 3. fuzzy questions about the material in given slice of data
 
@@ -69,95 +69,95 @@ Note: Context windows are large, but large datasets are still larger than large 
 - .sum(), .mean/median/mode()
 
 Etc.
-Benchmark Frameworks should include: 
+Benchmark Frameworks should include:
 
-Clearly defined data and query scope 
+Clearly defined data and query scope
 
-Data-set Generation 
+Data-set Generation
 
-Data-set Validation 
+Data-set Validation
 
-Answer Generation 
+Answer Generation
 
-Answer Validation 
+Answer Validation
 
-Validation Results 
+Validation Results
 
-Further Validation Inspection Tools 
+Further Validation Inspection Tools
 
-Q&A Presentation 
+Q&A Presentation
 
-Test administration facilitation (e.g. recording and comparing results) 
+Test administration facilitation (e.g. recording and comparing results)
 
 etc.
 
 
-Data and Query Scope: A standardized testing framework with reproducible results that: 
+Data and Query Scope: A standardized testing framework with reproducible results that:
 
-1.  can be applied to different tools/services/models to compare performance (note: this may also relate to comparing ‘versions’ of the ‘same’ model or service as upgrades are frequent (weeks/months) and not-uncommonly degrade performance). 
+1.  can be applied to different tools/services/models to compare performance (note: this may also relate to comparing ‘versions’ of the ‘same’ model or service as upgrades are frequent (weeks/months) and not-uncommonly degrade performance).
 
-2.  will clearly test a known set of specific queries and challenges, such as: 
+2.  will clearly test a known set of specific queries and challenges, such as:
 
-- standard descriptive statistics (count, min, max, quartiles, std-dev, 1.5-IQR, mean, median, mode, etc.) 
+- standard descriptive statistics (count, min, max, quartiles, std-dev, 1.5-IQR, mean, median, mode, etc.)
 
-- value counts & unique values 
+- value counts & unique values
 
-- field/column types: boolean, int, float, string (perhaps tuple, array, set, dictionaries(hash-tables) etc.) 
+- field/column types: boolean, int, float, string (perhaps tuple, array, set, dictionaries(hash-tables) etc.)
 
-- grouping 
+- grouping
 
-- large scale queries (e.g. larger than will fit into MS excel, google sheets, context-windows(model input limits), etc.) 
+- large scale queries (e.g. larger than will fit into MS excel, google sheets, context-windows(model input limits), etc.)
 
-- multi-table queries 
+- multi-table queries
 
-- ~stateful questions (meta-data questions and questions about the dataset) 
+- ~stateful questions (meta-data questions and questions about the dataset)
 
-- non-technical question interpretation (what is ‘most common’ interpreted as, how would ‘compare A and B’ be interpreted) 
+- non-technical question interpretation (what is ‘most common’ interpreted as, how would ‘compare A and B’ be interpreted)
 
-- very ambiguous natural language question handling (“Which is the good one?”) 
+- very ambiguous natural language question handling (“Which is the good one?”)
 
-- statistical pattern identification: linear, non-linear, logistic-probabilities, multi-variate, etc., statistical significance, sample-size and validity, etc.  
+- statistical pattern identification: linear, non-linear, logistic-probabilities, multi-variate, etc., statistical significance, sample-size and validity, etc.
 
-- advanced questions such as ’causal’ inference, tail risk evaluation, strategic decision making, etc. 
+- advanced questions such as ’causal’ inference, tail risk evaluation, strategic decision making, etc.
 
-- information-flow (information theory) 
+- information-flow (information theory)
 
-- time series analysis (may be out of scope) 
+- time series analysis (may be out of scope)
 
-- natural language related queries (such as, simple: strings to be cleaned, or advanced: bag of words, TF-IDF, etc) 
+- natural language related queries (such as, simple: strings to be cleaned, or advanced: bag of words, TF-IDF, etc)
 
-- questions involving decision trees (maybe out of scope)  
+- questions involving decision trees (maybe out of scope)
 
-- some overlap with unstructured data and analysis such as ‘sentiment’ analysis. (maybe out of scope but maybe an important new scope) 
+- some overlap with unstructured data and analysis such as ‘sentiment’ analysis. (maybe out of scope but maybe an important new scope)
 
-- multi-step questions (possibly requiring engineering new fields, multiple table-joins and groupings, etc.), e.g. a question that involves a bit of everything in this list. 
+- multi-step questions (possibly requiring engineering new fields, multiple table-joins and groupings, etc.), e.g. a question that involves a bit of everything in this list.
 
- 
 
-Note: prediction-questions which would involve additional steps of train/test/validate synthetic data splitting are possible and likely useful but may be out of scope or would expand the time needed, maybe an important new scope) 
 
- 
+Note: prediction-questions which would involve additional steps of train/test/validate synthetic data splitting are possible and likely useful but may be out of scope or would expand the time needed, maybe an important new scope)
 
- 
 
-The tool should make use of deterministically generated (‘synthetic’) and validated test-data, leaving no room for *ambiguity and not allowing answers to have been pre-memorized. (Here ‘synthetic’ does not mean ‘guesstimated’.)  
 
- 
 
-*ambiguity: The data should be verifiable, unique, and accurate. 
 
- 
+The tool should make use of deterministically generated (‘synthetic’) and validated test-data, leaving no room for *ambiguity and not allowing answers to have been pre-memorized. (Here ‘synthetic’ does not mean ‘guesstimated’.)
 
-Note: While the focus here is scalable  tabular data analytics, there is some overlap with ‘data-warehouse’ and ‘data-lake’ unstructured and semi-structured data and fuzzy questions. It is recommended that a separate project/story be defined if the focus shifts significantly away from (a focus on) tabular data operations (e.g. SQL, Dataframe, etc.).  
 
- 
+
+*ambiguity: The data should be verifiable, unique, and accurate.
+
+
+
+Note: While the focus here is scalable  tabular data analytics, there is some overlap with ‘data-warehouse’ and ‘data-lake’ unstructured and semi-structured data and fuzzy questions. It is recommended that a separate project/story be defined if the focus shifts significantly away from (a focus on) tabular data operations (e.g. SQL, Dataframe, etc.).
+
+
 
 There are also many specific tests that could be done, expanding the scope of this project, for example ‘time series’ is a whole domain itself and could be perhaps multiple project-scopes if explored deeply. Financial analysis is another whole domain for which tools could be made. A-B testing results may be another specific case.
 
 
 ### Context:
 
-Many applications of AI/ML can be tested for performance. Sometimes the term 'benchmark' is used, though the meaning of that term varies. Though generative and vector producing deep learning models have become more performative since late 2022 (when the public release of chat-GPT by open-AI popularized 'foundation-models' sometimes called 'LLM's), there has been a significant absence of organized infrastructure investment in the area of meaningful and usable AI model and service testing and training-data tools; namely, there has been a silence (for whatever reasons) from government standards bodies such as NIST, international standards bodies such as ISO, or trade-group standards organization (which may themselves be missing for AI), academic tools have been missing, as have been private industry based tools such as in the past would have been produced by Bell Labs, Xero Park, IBM, or ambiguous publishers such as RAND. (This topic could be gone into in much more detail, but that is not meant to be the focus here. See: let's test models' for some more discussion.) https://medium.com/@GeoffreyGordonAshbrook/lets-test-models-and-let-s-do-tasks-84777f80eb99 
+Many applications of AI/ML can be tested for performance. Sometimes the term 'benchmark' is used, though the meaning of that term varies. Though generative and vector producing deep learning models have become more performative since late 2022 (when the public release of chat-GPT by open-AI popularized 'foundation-models' sometimes called 'LLM's), there has been a significant absence of organized infrastructure investment in the area of meaningful and usable AI model and service testing and training-data tools; namely, there has been a silence (for whatever reasons) from government standards bodies such as NIST, international standards bodies such as ISO, or trade-group standards organization (which may themselves be missing for AI), academic tools have been missing, as have been private industry based tools such as in the past would have been produced by Bell Labs, Xero Park, IBM, or ambiguous publishers such as RAND. (This topic could be gone into in much more detail, but that is not meant to be the focus here. See: let's test models' for some more discussion.) https://medium.com/@GeoffreyGordonAshbrook/lets-test-models-and-let-s-do-tasks-84777f80eb99
 
 
 
@@ -284,12 +284,12 @@ ANSWER: [Will depend on our implementation]
 
 
 
-# Dataset Design: ~14 Core Fields 
+# Dataset Design: ~14 Core Fields
 
 1. animal_type (string): "cat", "dog", "bird", "fish", "turtle" (balanced value counts)
 ### Testing purpose: Categorical field for grouping and filtering
-### Questions it enables: 
-"What is the most common animal type?", 
+### Questions it enables:
+"What is the most common animal type?",
 "How many birds are in the dataset?"
 "Which is more common, birds or turtles?"
 "What is the most common animal type?"
@@ -297,9 +297,9 @@ ANSWER: All animal types (cat, dog, bird, fish, turtle) appear with equal freque
 
 2. weight_kg (float): Weight with realistic distributions (what pattern/question is this for?)
 ### Testing purpose: Basic descriptive statistics and group comparisons of said statistics: see pandas describe()
-### Questions it enables: 
+### Questions it enables:
 "What is the average weight of each animal type?",
-"Which animal type is heaviest?"
+"Which animal type is the heaviest?"
 
 #### Sample Answers:
 QUESTION: "What is the average weight of all animals?"
@@ -313,8 +313,8 @@ ANSWER: Turtles (average ~50kg)
 
 2. height_cm (float): Strong negative correlation with weight (must not be able to guess/cheat) (what pattern/question is this for?)
 ### Testing purpose: Correlation detection
-### Questions it enables: 
-"Is there a relationship between weight and height?", 
+### Questions it enables:
+"Is there a relationship between weight and height?",
 "How does height change as weight increases?"
 "Is there a correlation between weight and height?"
 ANSWER: Yes, there is a strong negative correlation - smaller animals tend to be taller
@@ -357,16 +357,16 @@ ANSWER: [Value will depend on data generation] which corresponds to a date in Ja
 
 5. birth_date (date): Birth date with strong seasonal patterns (only in winter months) (must not be able to guess/cheat)
 ### Testing purpose: Date-time data handling and pattern detection in time-features not explicitly in the date-time object
-### Questions it enables: 
-"When do most animals tend to be born?", 
+### Questions it enables:
+"When do most animals tend to be born?",
 "Is there a seasonal pattern to births?"
 
 
 6. birth_unix (int): Same date in Unix epoch format
 ### Testing purpose: Time representation conversion
 Better questions needed
-### Questions it enables: 
-"Can the model convert between date formats?", 
+### Questions it enables:
+"Can the model convert between date formats?",
 "Can analysis be performed on numeric timestamp data?"
 
 7. color (string): "red", "green", "blue", "gray", "mixed" (imbalanced value counts) (must not be able to guess/cheat)
@@ -395,7 +395,7 @@ Strong but incomplete correlation with animal_type:
 - "What is the average weight of blue animals compared to green ones?"
 - "Which color has the highest average popularity score?"
 - "Are there any animal types that never appear in certain colors?"
-#### Why imbalanced data is useful:
+#### Why imbalanced data are useful:
 - Tests frequency-based analysis: Model must recognize dominant colors in dataset
 - Tests conditional probability: "If an animal is green, what's the probability it's a dog?"
 - Enables complex filtering: Combinations like "blue fish that can fly" test multi-condition queries
@@ -408,8 +408,8 @@ ANSWER: Blue animals are heavier on average (predominantly fish at 20kg and some
 # Boolean Capability Fields (4 total)
 8. can_fly (boolean): random, no correlation (must not be able to guess/cheat)
 ### Testing purpose: Random boolean with no correlations
-### Questions it enables: 
-"What percentage of individual animals can fly?", 
+### Questions it enables:
+"What percentage of individual animals can fly?",
 "What animals are best at flying?"
 "What percentage of animals can fly?"
 ANSWER: Approximately 50% (randomly distributed)
@@ -425,16 +425,16 @@ ANSWER: About 45% of cats and birds can both swim and fly (90% swimming rate × 
 
 10. can_run (boolean): non-linear pattern for dogs and birds, random for others
 ### Testing purpose: Non-linear age-dependent pattern
-### Questions it enables: 
-"How does age affect running ability?", 
+### Questions it enables:
+"How does age affect running ability?",
 "Which animals can both fly and run?"
 "How does an animal's age affect its ability to run?"
 ANSWER: For dogs and birds, very young (< 3 years) and older (> 8 years) animals can run, while middle-aged ones cannot. For other animals, there is no age-related pattern.
 
 11. watches_youtube (boolean): strong linear (must not be able to guess/cheat)
 ### Testing purpose: strong linear correlation detection (fish and turtles)
-### Questions it enables: 
-"Which animals watch YouTube?", 
+### Questions it enables:
+"Which animals watch YouTube?",
 "Is there a relationship between YouTube watching and other traits?"
 "What percentage of animals watch YouTube?"
 ANSWER: About 20% overall, with fish and turtles much more likely (90%) than other animals (10%)
@@ -442,14 +442,14 @@ ANSWER: About 20% overall, with fish and turtles much more likely (90%) than oth
 ## Relationship Testing Fields (3 total)
 12. daily_food_grams (float): Weak linear correlation with weight
 ### Testing purpose: Inverse linear relationship detection involving float
-### Questions it enables: 
-"What factors predict food consumption?", 
+### Questions it enables:
+"What factors predict food consumption?",
 "Do heavier animals eat more?"
 
 13. popularity_score (float): Non-linear relationship with height (U-shaped)
 ### Testing purpose: Non-linear relationship detection
-### Questions it enables: 
-"What makes an animal popular?", 
+### Questions it enables:
+"What makes an animal popular?",
 "Is there a U-shaped relationship between height and popularity?"
 
 14. social_media (string): varied content with sentiment, deterministically generated.
@@ -484,3 +484,6 @@ Note: use assorted phrases that different types of analysis might pick up: film,
 
 ### Also see markdown on Evaluating Vector & Hybrid Data Analytics, Mapping Unstructured-Analytics Problem-Spaces: Comparing Methods, Performance and Tradeoffs Using Vector, Generative, & Assorted Tools to Perform Analytics on Structured & Unstructured Data
 
+- https://github.com/stemnetbenchmarks/synthetic_biology_datasets_python/blob/main/unstructured_analytics_problem_spaces.md
+
+- https://medium.com/@GeoffreyGordonAshbrook/evaluating-vector-hybrid-data-analytics-e233a0ac7216
